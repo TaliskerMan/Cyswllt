@@ -27,3 +27,6 @@ Contributions are welcome! Please ensure all builds start and end in the `artifa
 
 ## License
 GNU GPL v3
+
+## Copyright
+Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>

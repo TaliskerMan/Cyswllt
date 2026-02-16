@@ -29,3 +29,7 @@
 ## Release 0.1.4 (2026-02-16)
 - Bumped version to 0.1.4
 - Built and signed DEB package
+
+## Release 0.1.5 (2026-02-16)
+- Bumped version to 0.1.5
+- Built and signed DEB package

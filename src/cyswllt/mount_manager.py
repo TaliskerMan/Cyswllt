@@ -1,3 +1,7 @@
+# Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+# This file is part of Cyswllt.
+# Released under the GNU GPL v3 license.
+
 import subprocess
 import os
 import time
