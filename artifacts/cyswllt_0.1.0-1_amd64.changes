@@ -1,0 +1,46 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Mon, 16 Feb 2026 12:00:00 -0600
+Source: cyswllt
+Binary: cyswllt
+Built-For-Profiles: noudeb
+Architecture: source all
+Version: 0.1.0-1
+Distribution: unstable
+Urgency: medium
+Maintainer: Chuck Talk <cwtalk1@gmail.com>
+Changed-By: Chuck Talk <cwtalk1@gmail.com>
+Description:
+ cyswllt    - Google Drive mounter for Linux
+Changes:
+ cyswllt (0.1.0-1) unstable; urgency=medium
+ .
+   * Initial release.
+Checksums-Sha1:
+ bd93fdd878027ed4b844ce3fb9e924b74c196b6c 1110 cyswllt_0.1.0-1.dsc
+ 23eee8f6b156c32a551393967cc8a6acfc8ad10e 61132 cyswllt_0.1.0.orig.tar.gz
+ a0fddd5458378c1bf3c10dd2f5c060d1347741ed 20 cyswllt_0.1.0-1.diff.gz
+ a9f495d6fc54072e5bce78589e8df6d555e6e66f 33912 cyswllt_0.1.0-1_all.deb
+ 6b010170d77232782589f20b7006ae85a24dbc2c 20516 cyswllt_0.1.0-1_amd64.buildinfo
+Checksums-Sha256:
+ f3a20b43395dd56dfd4a83f4583b500a9bf1a028b462b09cdb0bf99669c3e100 1110 cyswllt_0.1.0-1.dsc
+ e532fa9ed0d297696fb51846ed8e731146721d30dc9237d41278f5134943b763 61132 cyswllt_0.1.0.orig.tar.gz
+ f61f27bd17de546264aa58f40f3aafaac7021e0ef69c17f6b1b4cd7664a037ec 20 cyswllt_0.1.0-1.diff.gz
+ e7b16ead41effb9317fb20bdef61fc2cc7ab0dd4f493dad9cc0a899a862f18ae 33912 cyswllt_0.1.0-1_all.deb
+ b8c031f364cd89ceef88bbb82e0f2ec8f19e88015cedeb9b750ad36543d54a83 20516 cyswllt_0.1.0-1_amd64.buildinfo
+Files:
+ 21860f60d86c8231c5da172b3cbdf4f4 1110 utils optional cyswllt_0.1.0-1.dsc
+ b1469e08232b4279c0be947ca526c809 61132 utils optional cyswllt_0.1.0.orig.tar.gz
+ 4a4dd3598707603b3f76a2378a4504aa 20 utils optional cyswllt_0.1.0-1.diff.gz
+ 6bbd06d58294a277919a405445685c6f 33912 utils optional cyswllt_0.1.0-1_all.deb
+ 0ea3b0bd896d5ccb523f4217ec77da95 20516 utils optional cyswllt_0.1.0-1_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iIgEARYKADAWIQRurtxXjsh/94S0iLHhabBBy7SSpAUCaZNlnxIcY3d0YWxrMUBn
+bWFpbC5jb20ACgkQ4WmwQcu0kqRU4gD/RzSr/jvaR1/SwY/6/8tnzEp/HFdWmvI/
++KOSrxOikHsA/2380083+g8IhY6qajRhZCxdP1yxbd8VGGaJidPVKP8P
+=2DH9
+-----END PGP SIGNATURE-----

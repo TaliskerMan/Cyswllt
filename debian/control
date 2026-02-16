@@ -1,0 +1,16 @@
+Source: cyswllt
+Section: utils
+Priority: optional
+Maintainer: Chuck Talk <cwtalk1@gmail.com>
+Build-Depends: debhelper-compat (= 13), python3, dh-python
+Standards-Version: 4.6.2
+Homepage: https://github.com/TaliskerMan/Cyswllt
+
+Package: cyswllt
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-gi, gir1.2-gtk-4.0, gir1.2-adw-1, rclone, rsync
+Description: Google Drive mounter for Linux
+ Cyswllt (Welsh for "Connect") is a GTK application that allows you to
+ easily mount and unmount your Google Drive on Linux locally.
+ .
+ It uses rclone as a backend and integrates with the GNOME Desktop.
