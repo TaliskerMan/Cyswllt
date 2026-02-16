@@ -1,0 +1,46 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Mon, 16 Feb 2026 13:03:48 -0600
+Source: cyswllt
+Binary: cyswllt
+Built-For-Profiles: noudeb
+Architecture: source all
+Version: 0.1.4-1
+Distribution: unstable
+Urgency: medium
+Maintainer: Chuck Talk <cwtalk1@gmail.com>
+Changed-By: Chuck Talk <cwtalk1@gmail.com>
+Description:
+ cyswllt    - Google Drive mounter for Linux
+Changes:
+ cyswllt (0.1.4-1) unstable; urgency=medium
+ .
+   * Release v0.1.4
+Checksums-Sha1:
+ 1f9af12e755ca59ab9bc86b2f1f35ef8257d2042 1145 cyswllt_0.1.4-1.dsc
+ 3671c7bb141b93e825af69952f82d0e1307a7dce 764680 cyswllt_0.1.4.orig.tar.gz
+ 69dd867b11505fe65503fff18e8649d0fb70bc48 1712 cyswllt_0.1.4-1.debian.tar.xz
+ 5562dc00f8ed91eb64b15508f359ee1966a119f0 413662 cyswllt_0.1.4-1_all.deb
+ 8aca60d6cb6df7af042aa5a8f9f01d2371003a15 20519 cyswllt_0.1.4-1_amd64.buildinfo
+Checksums-Sha256:
+ 2988b382520a0fc6aa7f28f6e7fbf6530fcb90029be9306259cd38488850582e 1145 cyswllt_0.1.4-1.dsc
+ 38bfd0e576e5068adbafc909aba04fb3b34e2193018aad803887d1560fe85ca0 764680 cyswllt_0.1.4.orig.tar.gz
+ befe098da4e5b59adafd4ebca174db700540202573c66b67a7dbc1aca7800bfc 1712 cyswllt_0.1.4-1.debian.tar.xz
+ 73503119abf7372915cb9f5697072d7e180c2330ac85ebe92f7f4a6b57c1ace1 413662 cyswllt_0.1.4-1_all.deb
+ 3d45a7543d44e94d4f07b8d8203e7f71d1198205016b6d4efae198c25d37a7f8 20519 cyswllt_0.1.4-1_amd64.buildinfo
+Files:
+ a3e639f6ade1f55cab25a9589675aead 1145 utils optional cyswllt_0.1.4-1.dsc
+ a2f11cfa74d269bd1dfbdc0a4657a22b 764680 utils optional cyswllt_0.1.4.orig.tar.gz
+ bdd617e0ee401112ea933f369cc0f462 1712 utils optional cyswllt_0.1.4-1.debian.tar.xz
+ b1bc3e9c7a63536b538bc8cf017c8d50 413662 utils optional cyswllt_0.1.4-1_all.deb
+ 0f6751d6285593713b6208364ce78d37 20519 utils optional cyswllt_0.1.4-1_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iIgEARYKADAWIQRurtxXjsh/94S0iLHhabBBy7SSpAUCaZNqGBIcY3d0YWxrMUBn
+bWFpbC5jb20ACgkQ4WmwQcu0kqQemAEAvfRPcOFg95/hcuOc3cKDdWj8vTxz9GXV
+cqSBRc2bqGYA/Rij42Q4gjHUfGM68Q7YdP5dH99g7M4JEFOzwV/H9V4G
+=mhLB
+-----END PGP SIGNATURE-----

@@ -74,6 +74,6 @@ echo "Committing and tagging..."
 git add .
 git commit -m "Release v$NEW_VERSION"
 git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-git push origin main --tags
+git push origin HEAD --tags
 
 echo "Release $NEW_VERSION completed successfully!"
