@@ -9,7 +9,7 @@ import gi
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
-from gi.repository import Gtk, Adw, Gio, GLib
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk
 
 from cyswllt.auth_manager import AuthManager
 from cyswllt.mount_manager import MountManager
@@ -31,6 +31,12 @@ class CyswlltWindow(Adw.ApplicationWindow):
         # Header Bar
         header = Adw.HeaderBar()
         content.add_top_bar(header)
+
+        # Help Button
+        help_button = Gtk.Button(icon_name="help-about-symbolic")
+        help_button.set_action_name("app.help")
+        help_button.set_tooltip_text("Help & Usage")
+        header.pack_end(help_button)
 
         # Menu Button in Header
         menu = Gio.Menu()
@@ -137,7 +143,11 @@ class CyswlltWindow(Adw.ApplicationWindow):
 class CyswlltApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id='com.taliskerman.cyswllt',
-                         flags=Gio.ApplicationFlags.FLAGS_NONE)
+                         flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+
+    def do_command_line(self, command_line):
+        self.activate()
+        return 0
 
     def do_activate(self):
         win = self.props.active_window
@@ -148,6 +158,19 @@ class CyswlltApp(Adw.Application):
     def do_startup(self):
         Adw.Application.do_startup(self)
         
+        # Add local icon directory to theme search path so "cyswllt" icon name resolves
+        # This works for both dev (relative) and installed (/usr/share/icons/...) if we set it up right
+        # For installed, it should be in standard path, but for dev or if cache is broken, this helps.
+        import os
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        icon_dir = os.path.join(base_dir, "data", "icons")
+        
+        if os.path.exists(icon_dir):
+            display = Gdk.Display.get_default()
+            if display:
+                theme = Gtk.IconTheme.get_for_display(display)
+                theme.add_search_path(icon_dir)
+
         # Actions
         connect_action = Gio.SimpleAction.new("connect", None)
         connect_action.connect("activate", self.on_connect)
@@ -156,6 +179,27 @@ class CyswlltApp(Adw.Application):
         about_action = Gio.SimpleAction.new("about", None)
         about_action.connect("activate", self.on_about)
         self.add_action(about_action)
+
+        help_action = Gio.SimpleAction.new("help", None)
+        help_action.connect("activate", self.on_help)
+        self.add_action(help_action)
+
+    def on_help(self, action, param):
+        win = self.props.active_window
+        if not win:
+            return
+            
+        dialog = Adw.MessageDialog(
+            transient_for=win,
+            heading="How to use Cyswllt",
+            body="1. Click 'Connect' or 'Sign in with Google' to start authentication.\n"
+                 "2. A browser window will open. Allow access to your Google Drive.\n"
+                 "3. Once authenticated, your Drive will be mounted locally.\n"
+                 "4. You can access your files through your file manager.\n"
+                 "5. Click 'Disconnect' when you are finished to unmount the drive."
+        )
+        dialog.add_response("ok", "Got it")
+        dialog.present()
 
     def on_about(self, action, param):
         win = self.props.active_window
@@ -166,27 +210,18 @@ class CyswlltApp(Adw.Application):
         about = Adw.AboutWindow(
             transient_for=win,
             application_name="Cyswllt",
-            application_icon="com.taliskerman.cyswllt",
+            application_icon="cyswllt",
             developer_name="Chuck Talk",
             version=__version__,
-            copyright="© 2026 Chuck Talk <cwtalk1@gmail.com>",
+            copyright="© 2026 Chuck Talk &lt;cwtalk1@gmail.com&gt;",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/TaliskerMan/Cyswllt",
             issue_url="https://github.com/TaliskerMan/Cyswllt/issues"
         )
         
-        # If the icon isn't installed in the system theme, AdwAboutWindow might show broken icon.
-        # We can try to set the logo paintable to our file.
-        icon_path = "/home/freecode/antigrav/Cyswllt/data/icons/cyswllt.png"
-        if GLib.file_test(icon_path, GLib.FileTest.EXISTS):
-             texture = Gdk.Texture.new_from_filename(icon_path)
-             about.set_application_icon("cyswllt") # Fallback
-             # Adw.AboutWindow uses application_icon property which is a string name.
-             # It doesn't easy support a paintable unless we subclass or hack it.
-             # However, we can use Gtk.AboutDialog which supports logo.
-             # But Adw.AboutWindow is nicer. 
-             # Let's stick with Adw.AboutWindow and assume we install the icon properly in install.sh.
-             pass
+        # We rely on Gtk.IconTheme finding "cyswllt" now.
+        
+        about.present()
 
         about.present()
 

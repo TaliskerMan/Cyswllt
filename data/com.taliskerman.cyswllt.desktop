@@ -4,5 +4,6 @@ Comment=Mount Google Drive
 Exec=python3 /home/freecode/antigrav/Cyswllt/src/cyswllt/main.py
 Icon=/home/freecode/antigrav/Cyswllt/data/icons/cyswllt.png
 Terminal=false
+StartupNotify=true
 Type=Application
 Categories=Utility;GTK;

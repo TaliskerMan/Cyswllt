@@ -1,0 +1,132 @@
+ dpkg-buildpackage -us -uc -ui
+dpkg-buildpackage: info: source package cyswllt
+dpkg-buildpackage: info: source version 0.1.2-1
+dpkg-buildpackage: info: source distribution unstable
+dpkg-buildpackage: info: source changed by Chuck Talk <cwtalk1@gmail.com>
+ dpkg-source --before-build .
+dpkg-buildpackage: info: host architecture amd64
+ fakeroot debian/rules clean
+dh clean --with python3
+   dh_clean
+ dpkg-source -b .
+dpkg-source: warning: no source format specified in debian/source/format, see dpkg-source(1)
+dpkg-source: warning: source directory 'Cyswllt' is not <sourcepackage>-<upstreamversion> 'cyswllt-0.1.2'
+dpkg-source: warning: .orig directory name Cyswllt.orig is not <package>-<upstreamversion> (wanted cyswllt-0.1.2.orig)
+dpkg-source: info: using source format '1.0'
+dpkg-source: info: building cyswllt using existing cyswllt_0.1.2.orig.tar.gz
+dpkg-source: info: building cyswllt in cyswllt_0.1.2-1.diff.gz
+dpkg-source: warning: newly created empty file '.git/FETCH_HEAD' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/applypatch-msg.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/commit-msg.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/fsmonitor-watchman.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/post-update.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/pre-applypatch.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/pre-commit.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/pre-merge-commit.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/pre-push.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/pre-rebase.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/pre-receive.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/prepare-commit-msg.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/push-to-checkout.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/sendemail-validate.sample' will not be represented in diff
+dpkg-source: warning: executable mode 0775 of '.git/hooks/update.sample' will not be represented in diff
+dpkg-source: error: cannot represent change to .git/index: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/00/4bbbbdc5447f0a158241894bb8987290ac4454: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/05/e9b379e6a3219a418a50b698e87e819fffbda6: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/08/289bdffc49402ff698788185732e4f2172fa91 has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/0e/4836c61bdf640288ec6065bdda39d6829428f3: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/13/de29253b321a3c944b9290ab27b379a948b674: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/1a/092827a2d424362595808b6a5e8d5b729d4ddd: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/1b/3cfb541a718d9294ddda18f5b094c25dfe1dfb: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/20/04ab86c44a0c8053c4ebcca0dbe910034025f5: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/21/12071cf0561ea928b84670191b2f3153beeb21: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/22/a7e8d00ca7de1db6c8f636201331378db6364f: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/23/408385d7b56fcffa99d0d4355f0e44db3dfc27: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/24/446fed760418aeb8222844f8361842a4512ce7: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/25/ae55104e1f2730cfa476ea58a38bc6ebdf1b96: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/25/d164a3179f5056c23bcf402d368762bb9ff71f: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/26/a622c6c86656f97144d5e92a7573a690a4d27f: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/33/9cfe80bec601ad87b124ad1636593ae34f3e8c: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/37/1731e1cb1c97b042d09c1bae1b4b187a50567f: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/3c/1f91f23b785f2f372cd403dafb15c29072a5f3: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/47/a69573a3930872f3042ce32a16381691b21c71: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/4d/8a844426d67b42319cf807e47ae749015a9b11: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/5e/e9e38fab0a2b9df9edb4338fa2e84697eb40c1: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/61/224ca98aaf72603da9b0213e55e36141f5a6f6: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/62/3aabbce34be9392a3ad18a936bd597225ba69c: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/66/b3bbe0108f0765c81575ead80bfa86427cdf14: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/68/76b597b4fe267ac0f4d19cbf62de81eb500fa8: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/6b/4506e926f99ec9ec2bc6040e3438f2517bb67e: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/72/3abc2fe2a9d80f1966cc519f429bcf05df0a59: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/74/1898c484585ff298f61124634ef7c4ffe0f655 has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/75/9f0c599c022939de25b87fdabbbdd55b70fa15: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/76/a8055d50f4d40941b23aa77502df9ceaa0c03c has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/77/19ef3688f8232475161124eec4a009d122dc85: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/79/e7b6818e7378a181ff74c6be9c8873359632bd: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/7f/9e29d14af435a27083eb2a8f234bd053bc8f10 has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/87/71925e0546433130958d51b46605eac0fd27b2: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/8b/880e39ea846ce27adac6fa0064083a16d36f0e: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/8c/6a89dde01dea852466ca009871aab1d342b378: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/92/bceb6343439311c00ad6001b4e42633681363c: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/93/0dfbab6893435bf6b49ad836d8fea0a141a84c: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/a8/d2e26882f16d4a045dc0cbc31d833f2491f6ee: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/a9/cc81aa30c2deb3ef97becf7c6169195e933dc0: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/ad/81dc06abcc558380a31245f85caa4fb4d587d7: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/af/5e1fa8d80e5d94a412cfe8d93f807f8e5cc0db: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/b0/e3d5b0f228c0d42c79ba4945cb0f16bea55338: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/be/1d6b614c4fadd544c1fe4f05006fe548a8a2a3: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/c1/f40b06b3aa17489d31f83beb17984c0889a5bc has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/c3/1addc5c0e6eb1ed27cf550548cafff1ec4984b: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/c5/96ddecbe35704ac3e0f314f67a452d886de448 has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/ca/0006fb1dec7c99792c9013b2e5dbe5fcbac9bd: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/d1/d98a805e91ec757b6ad710b0f44435a8ad5da9: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/d7/58f941449c5e25b5cc9790f9df2fa9b82c2d07 has no final newline (either original or modified version)
+dpkg-source: warning: file Cyswllt/.git/objects/de/8b0903a9a2e3fec1b968ac03f84494ff79d21e has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/e3/63b0d2b12292a942e550853d4c62400d6e6162: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/e5/3d7ea1070a9b2b5ab9a220a33aca3dad1b34da: binary file contents changed
+dpkg-source: error: cannot represent change to .git/objects/e6/9de29bb2d1d6434b8b29ae775ad8c2e48c5391: binary file contents changed
+dpkg-source: warning: file Cyswllt/.git/objects/f7/fb55ee117c00599ebac03dac70d840f99f128b has no final newline (either original or modified version)
+dpkg-source: error: cannot represent change to .git/objects/fa/87995fedd43628d88541b0e6559c783003b8e5: binary file contents changed
+dpkg-source: error: cannot represent change to artifacts/cyswllt_0.1.0-1.diff.gz: binary file contents changed
+dpkg-source: error: cannot represent change to artifacts/cyswllt_0.1.0-1_all.deb: binary file contents changed
+dpkg-source: error: cannot represent change to artifacts/cyswllt_0.1.0.orig.tar.gz: binary file contents changed
+dpkg-source: warning: the diff modifies the following upstream files: 
+ .git/COMMIT_EDITMSG
+ .git/HEAD
+ .git/config
+ .git/description
+ .git/hooks/applypatch-msg.sample
+ .git/hooks/commit-msg.sample
+ .git/hooks/fsmonitor-watchman.sample
+ .git/hooks/post-update.sample
+ .git/hooks/pre-applypatch.sample
+ .git/hooks/pre-commit.sample
+ .git/hooks/pre-merge-commit.sample
+ .git/hooks/pre-push.sample
+ .git/hooks/pre-rebase.sample
+ .git/hooks/pre-receive.sample
+ .git/hooks/prepare-commit-msg.sample
+ .git/hooks/push-to-checkout.sample
+ .git/hooks/sendemail-validate.sample
+ .git/hooks/update.sample
+ .git/info/exclude
+ .git/logs/HEAD
+ .git/logs/refs/heads/master
+ .git/objects/08/289bdffc49402ff698788185732e4f2172fa91
+ .git/objects/74/1898c484585ff298f61124634ef7c4ffe0f655
+ .git/objects/76/a8055d50f4d40941b23aa77502df9ceaa0c03c
+ .git/objects/7f/9e29d14af435a27083eb2a8f234bd053bc8f10
+ .git/objects/c1/f40b06b3aa17489d31f83beb17984c0889a5bc
+ .git/objects/c5/96ddecbe35704ac3e0f314f67a452d886de448
+ .git/objects/d7/58f941449c5e25b5cc9790f9df2fa9b82c2d07
+ .git/objects/de/8b0903a9a2e3fec1b968ac03f84494ff79d21e
+ .git/objects/f7/fb55ee117c00599ebac03dac70d840f99f128b
+ .git/refs/heads/master
+ artifacts/checksums.sha512
+ artifacts/cyswllt_0.1.0-1.dsc
+ artifacts/cyswllt_0.1.0-1_amd64.build
+ artifacts/cyswllt_0.1.0-1_amd64.buildinfo
+ artifacts/cyswllt_0.1.0-1_amd64.changes
+dpkg-source: info: use the '3.0 (quilt)' format to have separate and documented changes to upstream files, see dpkg-source(1)
+dpkg-source: error: unrepresentable changes to source
+dpkg-buildpackage: error: dpkg-source -b . subprocess returned exit status 1

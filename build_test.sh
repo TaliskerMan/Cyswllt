@@ -35,10 +35,10 @@ else
 fi
 
 # 5. Update CyswlltPlan.md
-# echo "" >> "$PLAN_FILE"
-# echo "## Release $NEW_VERSION ($(date +%Y-%m-%d))" >> "$PLAN_FILE"
-# echo "- Bumped version to $NEW_VERSION" >> "$PLAN_FILE"
-# echo "- Built and signed DEB package" >> "$PLAN_FILE"
+echo "" >> "$PLAN_FILE"
+echo "## Release $NEW_VERSION ($(date +%Y-%m-%d))" >> "$PLAN_FILE"
+echo "- Bumped version to $NEW_VERSION" >> "$PLAN_FILE"
+echo "- Built and signed DEB package" >> "$PLAN_FILE"
 
 # 6. Build Package
 echo "Building package..."
@@ -69,11 +69,11 @@ echo "Signing and hashing..."
 debsign -k "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_amd64.changes"
 sha512sum "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" > "$ARTIFACTS_DIR/checksums.sha512"
 
-# 9. Git Operations
-echo "Committing and tagging..."
-git add .
-git commit -m "Release v$NEW_VERSION"
-git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-git push origin HEAD --tags
+# 9. Git Operations (SKIPPED FOR TEST BUILD)
+# echo "Committing and tagging..."
+# git add .
+# git commit -m "Release v$NEW_VERSION"
+# git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+# git push origin HEAD --tags
 
-echo "Release $NEW_VERSION completed successfully!"
+echo "Test Build $NEW_VERSION completed successfully!"

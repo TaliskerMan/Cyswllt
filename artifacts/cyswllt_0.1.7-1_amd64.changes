@@ -1,0 +1,46 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Mon, 16 Feb 2026 13:41:57 -0600
+Source: cyswllt
+Binary: cyswllt
+Built-For-Profiles: noudeb
+Architecture: source all
+Version: 0.1.7-1
+Distribution: unstable
+Urgency: medium
+Maintainer: Chuck Talk <cwtalk1@gmail.com>
+Changed-By: Chuck Talk <cwtalk1@gmail.com>
+Description:
+ cyswllt    - Google Drive mounter for Linux
+Changes:
+ cyswllt (0.1.7-1) unstable; urgency=medium
+ .
+   * Release v0.1.7
+Checksums-Sha1:
+ a6056c51c22e31e1a7b53c435b51cdbfae611473 1145 cyswllt_0.1.7-1.dsc
+ 0cfac0ac00801c5f5c80ceeb5d26b9b8f2bedb7b 829642 cyswllt_0.1.7.orig.tar.gz
+ 0ea86129f86ffab9308aad06b82fe98f58b843c4 1892 cyswllt_0.1.7-1.debian.tar.xz
+ d7ebe28bd8fafa4df8eba02404117784038a20a9 473514 cyswllt_0.1.7-1_all.deb
+ 34ebe3bffb5138cafd2351c38472d198f4646c7a 20519 cyswllt_0.1.7-1_amd64.buildinfo
+Checksums-Sha256:
+ da42aea3d3375a8695d1f72bf86080a5fa461410df8ccd3000ddfbd181163bd9 1145 cyswllt_0.1.7-1.dsc
+ caad7aded703099005d7187b939d6bdcd1586c3f4ab248f6c98f532bff1772b5 829642 cyswllt_0.1.7.orig.tar.gz
+ d3de7548298a539756d0e80691a928ccce7d47a2cedfea6d65f918799c201569 1892 cyswllt_0.1.7-1.debian.tar.xz
+ 05e40ddc15a57bc85e9c9af4a8e4356932daa1634d2f9d27f9ddfd3b1908d48a 473514 cyswllt_0.1.7-1_all.deb
+ 5ad83b48d4fb7cb38b889706f2f2eca1ef5a8cc02eacde51639ccef95a742fc0 20519 cyswllt_0.1.7-1_amd64.buildinfo
+Files:
+ d4be740bc1a87c71de42ce65aea1f4d1 1145 utils optional cyswllt_0.1.7-1.dsc
+ 143bc3f1b30e4adfb2539a2fe3d526de 829642 utils optional cyswllt_0.1.7.orig.tar.gz
+ 52deeaa2ecaa70d74a6a185491ef1087 1892 utils optional cyswllt_0.1.7-1.debian.tar.xz
+ ef234580349626c5108fac4f7b478852 473514 utils optional cyswllt_0.1.7-1_all.deb
+ bb6ea941aa19ef34849afbd7d3239aac 20519 utils optional cyswllt_0.1.7-1_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iIgEARYKADAWIQRurtxXjsh/94S0iLHhabBBy7SSpAUCaZNzCRIcY3d0YWxrMUBn
+bWFpbC5jb20ACgkQ4WmwQcu0kqQl9AEAwF1Kwi9yDMmwDG4sAvq9T8OK0RkUWnue
+u8tRgaPues8A/iGGPEHMmU975uD/R2OSigAWTmiSEtuGnrxFMUqLjs0O
+=/aq8
+-----END PGP SIGNATURE-----

@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = "configure" ]; then
+    if which gtk-update-icon-cache >/dev/null 2>&1 ; then
+        gtk-update-icon-cache -f -t /usr/share/icons/hicolor
+    fi
+fi
+
+#DEBHELPER#

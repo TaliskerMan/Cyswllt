@@ -1,0 +1,74 @@
+ dpkg-buildpackage -us -uc -ui -i(\.git|artifacts|__pycache__) -I.git -Iartifacts -I__pycache__
+dpkg-buildpackage: info: source package cyswllt
+dpkg-buildpackage: info: source version 0.1.7-1
+dpkg-buildpackage: info: source distribution unstable
+dpkg-buildpackage: info: source changed by Chuck Talk <cwtalk1@gmail.com>
+ dpkg-source -i(\.git|artifacts|__pycache__) -I.git -Iartifacts -I__pycache__ --before-build .
+dpkg-buildpackage: info: host architecture amd64
+ fakeroot debian/rules clean
+dh clean --with python3
+   dh_clean
+ dpkg-source -i(\.git|artifacts|__pycache__) -I.git -Iartifacts -I__pycache__ -b .
+dpkg-source: info: using source format '3.0 (quilt)'
+dpkg-source: info: building cyswllt using existing ./cyswllt_0.1.7.orig.tar.gz
+dpkg-source: info: building cyswllt in cyswllt_0.1.7-1.debian.tar.xz
+dpkg-source: info: building cyswllt in cyswllt_0.1.7-1.dsc
+ debian/rules build
+dh build --with python3
+   dh_update_autotools_config
+   dh_autoreconf
+   debian/rules override_dh_auto_build
+make[1]: Entering directory '/home/freecode/antigrav/Cyswllt'
+# No build step needed for pure python/script
+make[1]: Leaving directory '/home/freecode/antigrav/Cyswllt'
+   create-stamp debian/debhelper-build-stamp
+ fakeroot debian/rules binary
+dh binary --with python3
+   dh_testroot
+   dh_prep
+   debian/rules override_dh_auto_install
+make[1]: Entering directory '/home/freecode/antigrav/Cyswllt'
+# Custom install step to place files correctly
+mkdir -p debian/cyswllt/usr/lib/cyswllt
+mkdir -p debian/cyswllt/usr/bin
+mkdir -p debian/cyswllt/usr/share/applications
+mkdir -p debian/cyswllt/usr/share/icons/hicolor/256x256/apps
+# Copy source
+cp -r src debian/cyswllt/usr/lib/cyswllt/
+cp -r data debian/cyswllt/usr/lib/cyswllt/
+# Install launcher script
+echo '#!/bin/bash' > debian/cyswllt/usr/bin/cyswllt
+echo 'export PYTHONPATH=/usr/lib/cyswllt/src' >> debian/cyswllt/usr/bin/cyswllt
+echo 'exec python3 /usr/lib/cyswllt/src/cyswllt/main.py "override_dh_auto_install"' >> debian/cyswllt/usr/bin/cyswllt
+chmod +x debian/cyswllt/usr/bin/cyswllt
+# Install Desktop file and Icon
+cp data/com.taliskerman.cyswllt.desktop debian/cyswllt/usr/share/applications/
+cp data/icons/cyswllt.png debian/cyswllt/usr/share/icons/hicolor/256x256/apps/com.taliskerman.cyswllt.png
+# Fix paths in desktop file
+sed -i 's|Exec=.*|Exec=/usr/bin/cyswllt|' debian/cyswllt/usr/share/applications/com.taliskerman.cyswllt.desktop
+sed -i 's|Icon=.*|Icon=com.taliskerman.cyswllt|' debian/cyswllt/usr/share/applications/com.taliskerman.cyswllt.desktop
+make[1]: Leaving directory '/home/freecode/antigrav/Cyswllt'
+   dh_installdocs
+   dh_installchangelogs
+   dh_python3
+   dh_icons
+   dh_perl
+   dh_link
+   dh_strip_nondeterminism
+   dh_compress
+   dh_fixperms
+   dh_missing
+   dh_installdeb
+   dh_gencontrol
+   dh_md5sums
+   dh_builddeb
+dpkg-deb: building package 'cyswllt' in '../cyswllt_0.1.7-1_all.deb'.
+ dpkg-genbuildinfo -O../cyswllt_0.1.7-1_amd64.buildinfo
+ dpkg-genchanges -O../cyswllt_0.1.7-1_amd64.changes
+dpkg-genchanges: info: including full source code in upload
+ dpkg-source -i(\.git|artifacts|__pycache__) -I.git -Iartifacts -I__pycache__ --after-build .
+dpkg-buildpackage: info: full upload (original source is included)
+Now running lintian cyswllt_0.1.7-1_amd64.changes ...
+E: cyswllt changes: bad-distribution-in-changes-file unstable
+W: cyswllt: no-manual-page [usr/bin/cyswllt]
+Finished running lintian.

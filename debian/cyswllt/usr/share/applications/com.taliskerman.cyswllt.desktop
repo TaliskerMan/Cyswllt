@@ -4,5 +4,6 @@ Comment=Mount Google Drive
 Exec=/usr/bin/cyswllt
 Icon=com.taliskerman.cyswllt
 Terminal=false
+StartupNotify=true
 Type=Application
 Categories=Utility;GTK;
