@@ -1,9 +1,11 @@
-# Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+# Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
 import subprocess
 import json
+import logging
+import shutil
 import os
 import re
 
@@ -18,17 +20,22 @@ class AuthManager:
 
     def is_rclone_installed(self):
         """Checks if rclone is installed/available in PATH."""
+        rclone_path = shutil.which("rclone")
+        if not rclone_path:
+            return False
         try:
-            subprocess.run(["rclone", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+            subprocess.run([rclone_path, "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
             return True
         except (FileNotFoundError, subprocess.CalledProcessError):
             return False
 
     def is_authenticated(self):
         """Checks if the remote is already configured."""
+        rclone_path = shutil.which("rclone")
+        if not rclone_path: return False
         try:
             result = subprocess.run(
-                ["rclone", "listremotes"], 
+                [rclone_path, "listremotes"], 
                 capture_output=True, 
                 text=True, 
                 check=True
@@ -53,12 +60,17 @@ class AuthManager:
         # Let's try the 'authorize' approach as it gives us a JSON token blob
         # which we can then use to create the remote non-interactively.
         
+        rclone_path = shutil.which("rclone")
+        if not rclone_path:
+            logging.error("Rclone not found in PATH")
+            return False
+            
         try:
-            print("Starting authorization...")
+            logging.info("Starting authorization...")
             # 'rclone authorize drive' opens browser and prints token to stdout
             # We capture stdout. Note: rclone might print instructions to stderr.
             result = subprocess.run(
-                ["rclone", "authorize", "drive"],
+                [rclone_path, "authorize", "drive"],
                 capture_output=True,
                 text=True,
                 check=True
@@ -90,14 +102,14 @@ class AuthManager:
             # Validate it's valid JSON
             json.loads(token_json) 
             
-            print(f"Token received. Configuring remote '{self.REMOTE_NAME}'...")
+            logging.info(f"Token received. Configuring remote '{self.REMOTE_NAME}'...")
 
             # Now create the remote with this token
             # rclone config create <name> <type> <key>=<value> ...
             # We pass the token as a string. rclone expects 'token={"access_token":...}'
             subprocess.run(
                 [
-                    "rclone", "config", "create", 
+                    rclone_path, "config", "create", 
                     self.REMOTE_NAME, "drive", 
                     f"token={token_json}",
                     "config_is_local=false" 
@@ -108,19 +120,21 @@ class AuthManager:
             return True
             
         except subprocess.CalledProcessError as e:
-            print(f"Rclone error: {e}")
+            logging.error(f"Rclone error: {e}")
             if e.stderr:
-                print(f"Stderr: {e.stderr}")
+                logging.error(f"Stderr: {e.stderr}")
             return False
         except Exception as e:
-            print(f"Auth error: {e}")
+            logging.error(f"Auth error: {e}")
             return False
 
     def delete_remote(self):
         """Removes the remote configuration."""
+        rclone_path = shutil.which("rclone")
+        if not rclone_path: return False
         try:
             subprocess.run(
-                ["rclone", "config", "delete", self.REMOTE_NAME],
+                [rclone_path, "config", "delete", self.REMOTE_NAME],
                 check=True
             )
             return True
