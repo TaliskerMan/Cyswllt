@@ -1,8 +1,10 @@
-# Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+# Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
 import subprocess
+import shutil
+import logging
 import os
 import time
 
@@ -36,9 +38,9 @@ Categories=FileManager;
         try:
             with open(desktop_file, "w") as f:
                 f.write(content)
-            os.chmod(desktop_file, 0o755) # Make executable
+            os.chmod(desktop_file, 0o700) # Make executable securely
         except Exception as e:
-            print(f"Failed to create desktop file: {e}")
+            logging.error(f"Failed to create desktop file: {e}")
 
     def _remove_desktop_file(self):
         """Removes the .desktop file."""
@@ -47,7 +49,7 @@ Categories=FileManager;
             try:
                 os.remove(desktop_file)
             except Exception as e:
-                print(f"Failed to remove desktop file: {e}")
+                logging.error(f"Failed to remove desktop file: {e}")
 
     def mount(self):
         """Mounts the remote to ~/GoogleDrive."""
@@ -58,12 +60,17 @@ Categories=FileManager;
             self._create_desktop_file()
             return True
 
+        rclone_path = shutil.which("rclone")
+        if not rclone_path:
+            logging.error("rclone executable not found")
+            return False
+
         try:
             # We run rclone mount in the background
             # --vfs-cache-mode writes is generally recommended for usability
             subprocess.Popen(
                 [
-                    "rclone", "mount", 
+                    rclone_path, "mount", 
                     f"{self.remote_name}:", 
                     self.mount_point,
                     "--vfs-cache-mode", "writes",
@@ -81,7 +88,7 @@ Categories=FileManager;
             return False
             
         except Exception as e:
-            print(f"Mount error: {e}")
+            logging.error(f"Mount error: {e}")
             return False
 
     def unmount(self):
@@ -90,11 +97,19 @@ Categories=FileManager;
             self._remove_desktop_file()
             return True
 
+        fuser_path = shutil.which("fusermount")
+        if not fuser_path:
+            fuser_path = shutil.which("fusermount3")
+        
+        if not fuser_path:
+            logging.error("fusermount executable not found")
+            return False
+
         try:
             # use fusermount -u
-            subprocess.run(["fusermount", "-u", self.mount_point], check=True)
+            subprocess.run([fuser_path, "-u", self.mount_point], check=True)
             self._remove_desktop_file()
             return True
         except subprocess.CalledProcessError as e:
-            print(f"Unmount error: {e}")
+            logging.error(f"Unmount error: {e}")
             return False

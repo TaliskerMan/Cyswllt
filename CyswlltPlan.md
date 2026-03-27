@@ -22,6 +22,12 @@
 -   [ ] Create public release.
 -   [ ] Add more detailed error handling for rclone failures.
 
+## Security Hardening (Pending Approval)
+-   [ ] Rectify B103 Permission vulnerabilities and B603 subprocess execution flaws (Rule 15).
+-   [ ] Implement application-wide structured execution logging to `~/.cache/cyswllt/cyswllt.log` (Rule 14).
+-   [ ] Reassign copyright metadata and emails throughout all source code and UI interfaces to `chuck@nordheim.online` (Rule 16).
+-   [ ] Remediate automated repository packaging builds by switching `debsign` keys to `chuck@nordheim.online`, injecting detached GPG artifact generation (`.asc`), and publishing the pubkey (Rule 4).
+
 ## Release History
 
 ### Release 0.1.9 (2026-02-16)

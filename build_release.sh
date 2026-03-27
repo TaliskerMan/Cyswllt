@@ -5,7 +5,7 @@ set -e
 VERSION_FILE="src/cyswllt/version.py"
 PLAN_FILE="CyswlltPlan.md"
 ARTIFACTS_DIR="artifacts"
-GPG_KEY="cwtalk1@gmail.com"
+GPG_KEY="chuck@nordheim.online"
 
 # 1. Get current version
 CURRENT_VERSION=$(grep -oP '__version__ = "\K[^"]+' "$VERSION_FILE")
@@ -68,6 +68,10 @@ echo "Signing and hashing..."
 # We assume the user has gpg agent set up or will enter it.
 debsign -k "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_amd64.changes"
 sha512sum "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" > "$ARTIFACTS_DIR/checksums.sha512"
+
+# Create detached signature and export public key
+gpg --armor --detach-sign --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb"
+gpg --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
 
 # 9. Git Operations
 echo "Committing and tagging..."

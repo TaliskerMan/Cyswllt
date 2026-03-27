@@ -1,9 +1,11 @@
-# Copyright (C) 2026 Chuck Talk <cwtalk1@gmail.com>
+# Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
 import sys
 import threading
+import logging
+import os
 import gi
 
 gi.require_version('Gtk', '4.0')
@@ -213,7 +215,7 @@ class CyswlltApp(Adw.Application):
             application_icon="cyswllt",
             developer_name="Chuck Talk",
             version=__version__,
-            copyright="© 2026 Chuck Talk &lt;cwtalk1@gmail.com&gt;",
+            copyright="© 2026 Chuck Talk &lt;chuck@nordheim.online&gt;",
             license_type=Gtk.License.GPL_3_0,
             website="https://github.com/TaliskerMan/Cyswllt",
             issue_url="https://github.com/TaliskerMan/Cyswllt/issues"
@@ -242,7 +244,7 @@ class CyswlltApp(Adw.Application):
                 GLib.idle_add(lambda: win.status_label.set_label("Disconnecting..."))
                 success = win.mount_manager.unmount()
                 if not success:
-                    print("Failed to unmount")
+                    logging.error("Failed to unmount")
             elif is_auth:
                 # Authenticated but not mounted -> Mount
                 GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
@@ -259,7 +261,19 @@ class CyswlltApp(Adw.Application):
 
         threading.Thread(target=worker, daemon=True).start()
 
+def setup_logging():
+    log_dir = os.path.expanduser("~/.cache/cyswllt")
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, "cyswllt.log")
+    logging.basicConfig(
+        filename=log_file,
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
+    logging.info("Cyswllt Application Started")
+
 def main():
+    setup_logging()
     app = CyswlltApp()
     return app.run(sys.argv)
 
