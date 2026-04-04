@@ -61,3 +61,19 @@
 ### Release 0.1.1 (2026-02-16)
 -   Bumped version to 0.1.1
 -   Built and signed DEB package
+
+## Release 0.1.10 (2026-04-04)
+- Bumped version to 0.1.10
+- Built and signed DEB package
+
+## Release 0.1.11 (2026-04-04)
+- Bumped version to 0.1.11
+- Built and signed DEB package
+
+## Release 0.1.12 (2026-04-04)
+- Bumped version to 0.1.12
+- Built and signed DEB package
+
+## Release 0.1.13 (2026-04-04)
+- Bumped version to 0.1.13
+- Built and signed DEB package
