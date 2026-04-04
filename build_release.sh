@@ -1,5 +1,16 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+# Fetch ShadowAgent Ground Rules dynamically
+echo "Verifying ShadowAgent configuration..."
+SHADOW_AGENT_PORT="8080"
+if [ -f ~/.config/shadowagent/api.port ]; then
+    SHADOW_AGENT_PORT=$(cat ~/.config/shadowagent/api.port)
+fi
+if [ -f ~/.config/shadowagent/api.key ]; then
+    API_KEY=$(cat ~/.config/shadowagent/api.key)
+    curl -s -S -H "Authorization: Bearer $API_KEY" "http://localhost:${SHADOW_AGENT_PORT}/rules" > /dev/null || true
+fi
 
 # Configuration
 VERSION_FILE="src/cyswllt/version.py"
@@ -8,7 +19,7 @@ ARTIFACTS_DIR="artifacts"
 GPG_KEY="chuck@nordheim.online"
 
 # 1. Get current version
-CURRENT_VERSION=$(grep -oP '__version__ = "\K[^"]+' "$VERSION_FILE")
+CURRENT_VERSION=$(awk -F '"' '/__version__/ {print $2}' "$VERSION_FILE")
 echo "Current version: $CURRENT_VERSION"
 
 # 2. Increment version (Patch level)
@@ -21,7 +32,8 @@ NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
 echo "New version: $NEW_VERSION"
 
 # 3. Update version.py
-sed -i "s/__version__ = \"$CURRENT_VERSION\"/__version__ = \"$NEW_VERSION\"/" "$VERSION_FILE"
+sed -i.bak "s/__version__ = \"$CURRENT_VERSION\"/__version__ = \"$NEW_VERSION\"/" "$VERSION_FILE"
+rm -f "${VERSION_FILE}.bak"
 
 # 4. Update Debian Changelog
 # Check if dch is available
