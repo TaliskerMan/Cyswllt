@@ -1,6 +1,6 @@
 # <img src="data/cyswllt.jpg" width="48" height="48" align="top"> Cyswllt
 
-Cyswllt (Welsh for "Connect") is a GTK application that allows you to easily mount and unmount your Google Drive on Linux locally.
+Cyswllt (Welsh for "Connect") - pronounced like "Kuh-swill-it", is a GTK application that allows you to easily mount and unmount your Google Drive on Linux locally.
 
 ## Features
 -   **Google Authentication**: Securely connect to your Google Drive.
