@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
+# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
@@ -212,12 +212,12 @@ class CyswlltApp(Adw.Application):
         about = Adw.AboutWindow(
             transient_for=win,
             application_name="Cyswllt",
-            application_icon="cyswllt",
+            application_icon="noln",
             developer_name="Chuck Talk",
             version=__version__,
-            copyright="© 2026 Chuck Talk &lt;chuck@nordheim.online&gt;",
+            copyright="© 2026 Chuck Talk, Nordheim Online, LLC",
             license_type=Gtk.License.GPL_3_0,
-            website="https://github.com/TaliskerMan/Cyswllt",
+            website="https://nordheim.online",
             issue_url="https://github.com/TaliskerMan/Cyswllt/issues"
         )
         
