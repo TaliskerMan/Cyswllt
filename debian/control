@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: Chuck Talk <chuck@nordheim.online>
 Build-Depends: debhelper-compat (= 13), python3, dh-python
 Standards-Version: 4.6.2
+Rules-Requires-Root: no
 Homepage: https://github.com/TaliskerMan/Cyswllt
 
 Package: cyswllt
