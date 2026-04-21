@@ -60,13 +60,13 @@ echo "Building package..."
 # Let's clean up old builds first
 rm -f ../cyswllt_*.orig.tar.gz
 
-tar --exclude=debian --exclude=.git --exclude=artifacts --exclude=__pycache__ -czf "../cyswllt_$NEW_VERSION.orig.tar.gz" .
+tar --exclude=debian --exclude=.git --exclude=artifacts --exclude=__pycache__ --exclude=venv -czf "../cyswllt_$NEW_VERSION.orig.tar.gz" .
 
 # Build
 # -i: Ignore files matching regex (for diff)
 # -I: Ignore files (for tar)
 # We ignore .git, artifacts, and __pycache__ to prevent them from being part of the diff/tar
-debuild -us -uc -i"(\.git|artifacts|__pycache__)" -I".git" -I"artifacts" -I"__pycache__"
+debuild -us -uc -i"(\.git|artifacts|__pycache__|venv)" -I".git" -I"artifacts" -I"__pycache__" -I"venv"
 
 # 7. Move Artifacts
 echo "Moving artifacts..."

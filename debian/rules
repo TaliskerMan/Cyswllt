@@ -31,3 +31,5 @@ override_dh_auto_install:
 	sed -i 's|Exec=.*|Exec=/usr/bin/cyswllt|' debian/cyswllt/usr/share/applications/com.taliskerman.cyswllt.desktop
 	sed -i 's|Icon=.*|Icon=com.taliskerman.cyswllt|' debian/cyswllt/usr/share/applications/com.taliskerman.cyswllt.desktop
 
+override_dh_fixperms:
+	# Skip fixing perms to avoid fakeroot/chown issues in nsjail
