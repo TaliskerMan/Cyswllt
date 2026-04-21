@@ -263,8 +263,23 @@ class CyswlltApp(Adw.Application):
 
 def setup_logging():
     log_dir = os.path.expanduser("~/.cache/cyswllt")
-    os.makedirs(log_dir, exist_ok=True)
+    os.makedirs(log_dir, mode=0o700, exist_ok=True)
+    os.chmod(log_dir, 0o700) # Enforce tight permissions if already exists
     log_file = os.path.join(log_dir, "cyswllt.log")
+    
+    # Touch file securely if it doesn't exist to ensure permissions
+    if not os.path.exists(log_file):
+        try:
+            fd = os.open(log_file, os.O_WRONLY | os.O_CREAT, 0o600)
+            os.close(fd)
+        except Exception:
+            pass
+    else:
+        try:
+            os.chmod(log_file, 0o600)
+        except Exception:
+            pass
+            
     logging.basicConfig(
         filename=log_file,
         level=logging.INFO,

@@ -36,9 +36,11 @@ Terminal=false
 Categories=FileManager;
 """
         try:
-            with open(desktop_file, "w") as f:
+            # Secure file creation with tight permissions to prevent hijacking
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            mode = 0o700
+            with open(desktop_file, "w", opener=lambda path, flags: os.open(path, flags, mode)) as f:
                 f.write(content)
-            os.chmod(desktop_file, 0o700) # Make executable securely
         except Exception as e:
             logging.error(f"Failed to create desktop file: {e}")
 
@@ -54,7 +56,7 @@ Categories=FileManager;
     def mount(self):
         """Mounts the remote to ~/GoogleDrive."""
         if not os.path.exists(self.mount_point):
-            os.makedirs(self.mount_point)
+            os.makedirs(self.mount_point, mode=0o700)
 
         if self.is_mounted():
             self._create_desktop_file()

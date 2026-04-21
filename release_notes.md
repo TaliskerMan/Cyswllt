@@ -1,12 +1,15 @@
-# Cyswllt Release 0.1.12
+# Cyswllt Release 0.1.13
 
-This official release contains minor branding updates, URL mapping fixes, and essential security/compliance improvements aligned with the latest ShadowAgent policies.
+This release introduces comprehensive security hardening based on a thorough ShadowAgent security audit, ensuring Cyswllt robustly adheres to the "First, Do No Harm" design principle.
 
-## ✨ Updates & Branding
-* **Nordheim Online Logo**: The native About Window (`Adw.AboutWindow`) now strictly tracks and dynamically renders the `noln` branding logo directly from the system icon path.
-* **White Halo Artefacts Fixed**: Utilized localized fuzz-matting to completely strip out anti-aliasing white pixels around the logo edges for perfect native-theme transparency compliance.
-* **URL Routing**: Updated the canonical target URL string to strictly bind to `https://nordheim.online`.
-* **Copyright**: Formalized the ownership structural declaration string.
+## 🛡️ Security Hardening & Improvements
+* **Subprocess Security:** Verified that all `rclone` and `fusermount` invocations utilize list-form arguments, natively preventing shell injection vulnerabilities.
+* **Token Handling:** Validated that OAuth token extraction from `rclone authorize` output is handled via secure regex and native JSON parsing without exposing tokens to application logs.
+* **Tightened File Permissions:** 
+  * Enforced `0o700` strict permissions on the `~/GoogleDrive` local mount directory upon creation.
+  * Prevented race conditions during dynamic `.desktop` file generation by using secure `os.open` with `0o700` mode.
+  * Secured the logging directory (`~/.cache/cyswllt`) with `0o700` permissions and the log file (`cyswllt.log`) with `0o600` permissions to prevent local privilege escalation and information disclosure.
+* **Dependency Analysis:** Included `requirements.txt` to enable future automated Snyk Software Composition Analysis (SCA).
 
 ## 📦 Artifacts
 Deployed fully according to **ShadowAgent** offline compliance rules:
