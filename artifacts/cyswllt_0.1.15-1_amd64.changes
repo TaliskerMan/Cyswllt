@@ -1,0 +1,53 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Tue, 21 Apr 2026 10:58:23 -0500
+Source: cyswllt
+Binary: cyswllt
+Built-For-Profiles: noudeb
+Architecture: source all
+Version: 0.1.15-1
+Distribution: unstable
+Urgency: medium
+Maintainer: Chuck Talk <chuck@nordheim.online>
+Changed-By: Chuck Talk <chuck@nordheim.online>
+Description:
+ cyswllt    - Google Drive mounter for Linux
+Changes:
+ cyswllt (0.1.15-1) unstable; urgency=medium
+ .
+   * Release v0.1.15
+Checksums-Sha1:
+ 5d308b0ba132670cf007f7ae8a0940b87576ee7f 1773 cyswllt_0.1.15-1.dsc
+ 9e78382c7022449c9aa7184ac6f3014e9d1b8a03 2068 cyswllt_0.1.15-1.debian.tar.xz
+ 72bd16fa6e715ab2856489f7477bb50d3492489e 2410922 cyswllt_0.1.15-1_all.deb
+ 707d6ef25cfab57fd7fbae9721db89c88cf31c88 21553 cyswllt_0.1.15-1_amd64.buildinfo
+Checksums-Sha256:
+ b44467c1e6e856a396141f31d096db755d8269882ab525e1292f0a115a565cfd 1773 cyswllt_0.1.15-1.dsc
+ 29b4bf1fd05eeb190e61e1e0085ec25d983af9831a5e6eb50299ba8f8100baf5 2068 cyswllt_0.1.15-1.debian.tar.xz
+ 4292b08d1d5b5a9bbe54b25d659133569cae373740bdd663045825164a5dd13f 2410922 cyswllt_0.1.15-1_all.deb
+ ee9617354746dbabcb8a98cfd1a1f5ae932f18da1d3ba6e9d68dc36427222042 21553 cyswllt_0.1.15-1_amd64.buildinfo
+Files:
+ dd7c27b60d8382dc956a1f6a2132074f 1773 utils optional cyswllt_0.1.15-1.dsc
+ 633a0bfc725a3c1715b9f66609b6a3c0 2068 utils optional cyswllt_0.1.15-1.debian.tar.xz
+ 0782ba6f6d00b2893c0dd6f50a883f2f 2410922 utils optional cyswllt_0.1.15-1_all.deb
+ e505486eb2399abacf393a25e1138b1f 21553 utils optional cyswllt_0.1.15-1_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJKBAEBCgA0FiEEF3nND1DbtkwYeQgmSGPHNRfYEPgFAmnnnqIWHGNodWNrQG5v
+cmRoZWltLm9ubGluZQAKCRBIY8c1F9gQ+HmBD/95V9jrLa+NvgYFn2QWXdOYXBJo
+e9T5hrLEWtl2sN9FMtkAwysgRTteXgcuCtypwGOA7FrNtWd/7EuP5mi3nOqKf6JS
+NIc4ZfSNlFBTVqllXSRzy4UpdLBh3rTBOCZkVgIQSUCBjvI1f4zP1fku56ZTnrFK
+udHKS2LEF0QEgNyL+NEm44sk67RcpvDYXQwBd285fZpp1g9LMfo00XLL8rKbrjAu
+d+uQkdjengobtuHNKotQdNSm66RY98PfGC9ZoU1n/Fb+G+/D0EmPEI1f91rhguFB
+ne5hvWwJvoHJChEbACqariMwoshzonr6Chrdi4uI62mcvJEUJO7rjEph5rGoFfcS
+4cd6ZC52EbelNbcwtC3H19ZO/kRFNH8koDttPY4Ace7kPsOzY2iGOPbKwccCoMLv
+bbgaJdbCM6kiKalmlg40AEcIrS2yIO9OHVv41zblxpUABoltQtlYfpoe0JyYYZ8S
+O757vbpiz22A4q6btrBuHdTnKXyPTJHhNNTCTDwrCSjMcLiGzMhaFBFSxPwxvSfe
+5qM/3F8SLbXriUhFjM0JmOSIta2E6uODP3ro4h6J27l0oXHwiU4LqhAK46GKFMQb
+Qn5ngL3YyOWuTyrDtjAAIGOl8yy2xSlj+jcg2jWAEmLkSNUuI+8jdAo6kAbYw+lv
+VsD/QfP7KG3Jrf3gEQ==
+=rmiv
+-----END PGP SIGNATURE-----

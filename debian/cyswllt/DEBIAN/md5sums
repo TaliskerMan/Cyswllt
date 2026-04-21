@@ -1,0 +1,16 @@
+db47e3109648b41b7fae0b6f6020f9b8  usr/bin/cyswllt
+80c937e84363cb01a9a947d8322afd39  usr/lib/cyswllt/data/com.taliskerman.cyswllt.desktop
+132c12949b60fc5d14d0daa093164970  usr/lib/cyswllt/data/cyswllt.jpg
+aae847b2116810acbaf9b2e986d9eeb7  usr/lib/cyswllt/data/icons/cyswllt.png
+3a1b3464e8842d99017530210076afb7  usr/lib/cyswllt/data/icons/noln.png
+26f7d52c14578aa0142a78bd34011e99  usr/lib/cyswllt/data/noln.png
+d41d8cd98f00b204e9800998ecf8427e  usr/lib/cyswllt/src/cyswllt/__init__.py
+bb6fb1ce7e41e1adb3d8217df8339176  usr/lib/cyswllt/src/cyswllt/auth_manager.py
+417fb7ea6f82888156faf3a846229184  usr/lib/cyswllt/src/cyswllt/main.py
+b440d584f1dab6db3d86a5769e5081e2  usr/lib/cyswllt/src/cyswllt/mount_manager.py
+83bdd8c514b134bc2361910cfec57f5d  usr/lib/cyswllt/src/cyswllt/version.py
+13744952831b6a6ba9708c5dd3d7be75  usr/share/applications/com.taliskerman.cyswllt.desktop
+0fd8756d2d74f1090d7aab3f21c97d1b  usr/share/doc/cyswllt/changelog.Debian.gz
+8cc073311fac93460f0f6ad8097b4229  usr/share/doc/cyswllt/copyright
+aae847b2116810acbaf9b2e986d9eeb7  usr/share/icons/hicolor/256x256/apps/com.taliskerman.cyswllt.png
+7828c480698260f4914f59735649b92d  usr/share/python3/runtime.d/cyswllt.rtupdate
