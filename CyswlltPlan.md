@@ -30,7 +30,7 @@
 
 ## Release History
 
-### Release 0.1.13 (Pending)
+### Release 0.1.15 (Pending)
 -   **Security**: Comprehensive security audit and hardening (file permissions tightened, logs secured).
 
 ## Release History
