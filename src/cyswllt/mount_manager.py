@@ -69,13 +69,19 @@ Categories=FileManager;
 
         try:
             # We run rclone mount in the background
-            # --vfs-cache-mode writes is generally recommended for usability
+            # Optimized for Google Drive performance:
+            # - vfs-cache-mode full: caches reads/writes for local-like performance
+            # - dir-cache-time: caches directory listings to speed up rendering
+            # - vfs-read-chunk-size: downloads faster
             subprocess.Popen(
                 [
                     rclone_path, "mount", 
                     f"{self.remote_name}:", 
                     self.mount_point,
-                    "--vfs-cache-mode", "writes",
+                    "--vfs-cache-mode", "full",
+                    "--dir-cache-time", "72h",
+                    "--vfs-read-chunk-size", "128M",
+                    "--vfs-cache-max-size", "10G",
                     "--daemon" # Run as daemon so it persists
                 ]
             )
