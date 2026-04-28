@@ -1,0 +1,56 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Format: 1.8
+Date: Tue, 28 Apr 2026 06:09:23 -0500
+Source: cyswllt
+Binary: cyswllt
+Built-For-Profiles: noudeb
+Architecture: source all
+Version: 0.1.16-1
+Distribution: unstable
+Urgency: medium
+Maintainer: Chuck Talk <chuck@nordheim.online>
+Changed-By: Chuck Talk <chuck@nordheim.online>
+Description:
+ cyswllt    - Google Drive mounter for Linux
+Changes:
+ cyswllt (0.1.16-1) unstable; urgency=medium
+ .
+   * Release v0.1.16
+Checksums-Sha1:
+ edb041d591bed4bdbc09c0648b46190f637b46cd 1773 cyswllt_0.1.16-1.dsc
+ c5a4030e636a5be8e6d26194584cc56a7fe27eb1 2770430 cyswllt_0.1.16.orig.tar.gz
+ 3f534fd065f0054f648ee76f156f9591c6e20b55 2080 cyswllt_0.1.16-1.debian.tar.xz
+ a7933ba87bd4f702ef7c020429fc225e089b3bbf 2411050 cyswllt_0.1.16-1_all.deb
+ 99f071f2ffd200f6de32716db0bc8f90734379bf 21583 cyswllt_0.1.16-1_amd64.buildinfo
+Checksums-Sha256:
+ 73ae4d440a9e1ec93d5d86826aba99e349b2980fc02a2326e5b09e37f7c45c59 1773 cyswllt_0.1.16-1.dsc
+ 32238b3abd1d37dd5e6e5962573a0b27ca147ce6826370de257635c6e7048d1e 2770430 cyswllt_0.1.16.orig.tar.gz
+ e243ed3aa9452ac7af9a8ae60a4964e5a792f9b26097368ab57c26e0fbddf79b 2080 cyswllt_0.1.16-1.debian.tar.xz
+ 5075651aec8dc70ccd55d03b4f2f6b9d55d8d608eb4ff1e11c192a9d65ffe912 2411050 cyswllt_0.1.16-1_all.deb
+ cd903db02a45ae6477036d82ac3d393a985feed2bc8a54d6b87b6a7faf5d6f8a 21583 cyswllt_0.1.16-1_amd64.buildinfo
+Files:
+ eeb6118f27e1a534fe0d518a64af84ac 1773 utils optional cyswllt_0.1.16-1.dsc
+ 33c017d401b284ed0bf46a5901a9830c 2770430 utils optional cyswllt_0.1.16.orig.tar.gz
+ b7aea73b93261943de64ce69139b8832 2080 utils optional cyswllt_0.1.16-1.debian.tar.xz
+ 659d351fc657cd4849da55eb3356fec5 2411050 utils optional cyswllt_0.1.16-1_all.deb
+ 169a9e47f8c43d5cf73a8c7a3256e982 21583 utils optional cyswllt_0.1.16-1_amd64.buildinfo
+
+-----BEGIN PGP SIGNATURE-----
+
+iQJKBAEBCgA0FiEEF3nND1DbtkwYeQgmSGPHNRfYEPgFAmnwlWgWHGNodWNrQG5v
+cmRoZWltLm9ubGluZQAKCRBIY8c1F9gQ+LspD/45ueArxu8Xm8i9mIGK0hy++X4l
+3kQMYFOUGYhiXz8P/auOYZy+zvpjNHuZL6T1ErtOYaePrhCOMFOQeY6mFgI80SmP
+LeTg8zMMXfbsvETRDBRE6U0fceN9PCHPyNRqNrDCUnuh02WBBIqMPmufiVGriF+o
+NfJqtlq8R4do2mUHNx/UYkD3BfTPb1x+fNC9CxmokTHXTHy6YoNMKoW8cqafnrAT
+9q8ycdxRWF6bL98J/OQhIUb/pPDxej9DdZNnuQL8H67AOcWio3z5XhDUmPM2z7Fw
+n0zxRruORquewi0ueNyQ9LY1KsR2PrcRQD0KbF14eOAk5rycKRbZLNeSNJc2jau5
+/Apv4NEAG5+4LcDD4tQNfATnU+mFqyIDdgLfzfHzbiJGYQutT0JDpebDdo+/rdIp
+TnFFoaPQqevSfjPZF4H0XfzVxWNXbtopF2WdsEdxz8zbCJnIoqO7lckrzecHUWXb
+QlIivlbWHT6EpC2cxgyDDgFIN81dpy6CX6+rWX5flCpq6/m6DPB6DaL/AGSx8A/P
+o+jKKFG0ZRLFWhCqB9w1FBbZRaLaTsIuFmYARObxRD9AZpMIDJBJb0iO1jF2nJYU
+xJl7KGWVPjOyiWdfENA2UulHLIb1/nJfj3v+IN/F6ZwcawS+5KpiUOb/FpxpqWrD
+84AgqJFb6hB+iok7dA==
+=z6wq
+-----END PGP SIGNATURE-----

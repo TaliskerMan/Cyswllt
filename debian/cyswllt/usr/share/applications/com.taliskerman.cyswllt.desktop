@@ -7,3 +7,4 @@ Terminal=false
 StartupNotify=true
 Type=Application
 Categories=Utility;GTK;
+StartupWMClass=com.taliskerman.cyswllt
