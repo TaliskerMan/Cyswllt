@@ -54,7 +54,7 @@ Categories=FileManager;
                 logging.error(f"Failed to remove desktop file: {e}")
 
     def mount(self):
-        """Mounts the remote to ~/GoogleDrive."""
+        """Mounts the remote to ~/GoogleDrive with optimised VFS caching flags."""
         if not os.path.exists(self.mount_point):
             os.makedirs(self.mount_point, mode=0o700)
 
@@ -68,33 +68,61 @@ Categories=FileManager;
             return False
 
         try:
+<<<<<<< HEAD
             # We run rclone mount in the background
             # Optimized for Google Drive performance:
             # - vfs-cache-mode full: caches reads/writes for local-like performance
             # - dir-cache-time: caches directory listings to speed up rendering
             # - vfs-read-chunk-size: downloads faster
+=======
+            # Performance-optimised rclone mount flags:
+            #
+            # --vfs-cache-mode full
+            #   Cache both reads and writes locally. After the first access,
+            #   files and directories behave much like a local disk.
+            #
+            # --dir-cache-time 72h
+            #   Cache directory listings for 72 hours so repeated folder
+            #   visits are instant without re-querying Google Drive.
+            #
+            # --vfs-read-chunk-size 128M
+            #   Download data in large 128 MB chunks, significantly speeding
+            #   up transfers of large files.
+            #
+            # --vfs-cache-max-size 10G
+            #   Cap the local VFS cache at 10 GB to avoid filling the disk.
+            #
+            # --daemon
+            #   Detach and run as a background daemon so the mount persists
+            #   after Cyswllt's process exits.
+>>>>>>> c732038 (Save artifacts and plans)
             subprocess.Popen(
                 [
-                    rclone_path, "mount", 
-                    f"{self.remote_name}:", 
+                    rclone_path, "mount",
+                    f"{self.remote_name}:",
                     self.mount_point,
                     "--vfs-cache-mode", "full",
                     "--dir-cache-time", "72h",
                     "--vfs-read-chunk-size", "128M",
                     "--vfs-cache-max-size", "10G",
+<<<<<<< HEAD
                     "--daemon" # Run as daemon so it persists
+=======
+                    "--daemon",
+>>>>>>> c732038 (Save artifacts and plans)
                 ]
             )
-            
-            # Wait a bit for mount to initialize
+
+            # Wait up to 5 seconds for the mount to initialise
             for _ in range(10):
                 if self.is_mounted():
                     self._create_desktop_file()
                     return True
                 time.sleep(0.5)
-            
+
+            logging.error("Mount timed out — rclone daemon did not mount in time")
             return False
-            
+
         except Exception as e:
             logging.error(f"Mount error: {e}")
             return False
@@ -108,13 +136,12 @@ Categories=FileManager;
         fuser_path = shutil.which("fusermount")
         if not fuser_path:
             fuser_path = shutil.which("fusermount3")
-        
+
         if not fuser_path:
             logging.error("fusermount executable not found")
             return False
 
         try:
-            # use fusermount -u
             subprocess.run([fuser_path, "-u", self.mount_point], check=True)
             self._remove_desktop_file()
             return True

@@ -16,13 +16,159 @@ from gi.repository import Gtk, Adw, Gio, GLib, Gdk
 from cyswllt.auth_manager import AuthManager
 from cyswllt.mount_manager import MountManager
 
+
+class PerformanceDialog(Adw.PreferencesWindow):
+    """
+    A settings dialog that lets the user enter their own Google OAuth
+    Client ID and Secret.  Using private credentials bypasses rclone's
+    shared, heavily rate-limited Client ID and results in dramatically
+    faster initial connections and directory renders.
+    """
+
+    def __init__(self, auth_manager: AuthManager, transient_for=None):
+        super().__init__(transient_for=transient_for, modal=True)
+        self.auth_manager = auth_manager
+        self.set_title("Performance Settings")
+        self.set_default_size(480, -1)
+        self.set_search_enabled(False)
+
+        page = Adw.PreferencesPage()
+        self.add(page)
+
+        # ── Why section ──────────────────────────────────────────────
+        why_group = Adw.PreferencesGroup(
+            title="Custom Google Client ID",
+            description=(
+                "By default rclone uses a shared Client ID that is heavily "
+                "rate-limited by Google because millions of people use it. "
+                "Creating your own free Client ID in Google Cloud Console "
+                "bypasses those limits and gives a noticeably faster connection.\n\n"
+                "To get your credentials:\n"
+                "1. Go to console.cloud.google.com\n"
+                "2. Create a project → APIs & Services → Library → enable Google Drive API\n"
+                "3. APIs & Services → OAuth consent screen → External (add yourself as test user)\n"
+                "4. APIs & Services → Credentials → Create Credentials → OAuth client ID\n"
+                "5. Choose Desktop app → copy the Client ID and Secret below"
+            ),
+        )
+        page.add(why_group)
+
+        # ── Credential entry rows ─────────────────────────────────────
+        creds_group = Adw.PreferencesGroup()
+        page.add(creds_group)
+
+        self.client_id_row = Adw.EntryRow(title="Client ID")
+        self.client_id_row.set_show_apply_button(False)
+        creds_group.add(self.client_id_row)
+
+        self.client_secret_row = Adw.PasswordEntryRow(title="Client Secret")
+        creds_group.add(self.client_secret_row)
+
+        # Pre-fill if credentials already exist
+        existing = self.auth_manager.get_custom_credentials()
+        if existing:
+            self.client_id_row.set_text(existing.get("client_id", ""))
+            self.client_secret_row.set_text(existing.get("client_secret", ""))
+
+        # ── Status label ──────────────────────────────────────────────
+        self.status_label = Gtk.Label(label="")
+        self.status_label.set_margin_top(4)
+        self.status_label.set_margin_bottom(4)
+        self.status_label.set_wrap(True)
+        self.status_label.set_xalign(0)
+        creds_group.add(self.status_label)
+
+        # ── Action buttons ────────────────────────────────────────────
+        button_group = Adw.PreferencesGroup()
+        page.add(button_group)
+
+        save_row = Adw.ActionRow(title="Save credentials")
+        save_row.set_subtitle("Credentials are stored in ~/.config/cyswllt/ with restricted permissions")
+        save_btn = Gtk.Button(label="Save")
+        save_btn.add_css_class("suggested-action")
+        save_btn.set_valign(Gtk.Align.CENTER)
+        save_btn.connect("clicked", self._on_save)
+        save_row.add_suffix(save_btn)
+        save_row.set_activatable_widget(save_btn)
+        button_group.add(save_row)
+
+        clear_row = Adw.ActionRow(title="Clear credentials")
+        clear_row.set_subtitle("Revert to rclone's default shared Client ID")
+        clear_btn = Gtk.Button(label="Clear")
+        clear_btn.add_css_class("destructive-action")
+        clear_btn.set_valign(Gtk.Align.CENTER)
+        clear_btn.connect("clicked", self._on_clear)
+        clear_row.add_suffix(clear_btn)
+        clear_row.set_activatable_widget(clear_btn)
+        button_group.add(clear_row)
+
+        # ── Re-auth notice ────────────────────────────────────────────
+        notice_group = Adw.PreferencesGroup()
+        page.add(notice_group)
+
+        notice_row = Adw.ActionRow(
+            title="Changes take effect on next sign-in",
+            subtitle=(
+                "If you are already authenticated you will need to sign out "
+                "and sign back in for the new Client ID to be used."
+            ),
+        )
+        notice_row.set_icon_name("dialog-information-symbolic")
+        notice_group.add(notice_row)
+
+        self._refresh_status()
+
+    def _refresh_status(self):
+        if self.auth_manager.has_custom_credentials():
+            self.status_label.set_label("✓ Custom credentials are active")
+            self.status_label.add_css_class("success")
+            self.status_label.remove_css_class("error")
+        else:
+            self.status_label.set_label("Using rclone's default shared credentials")
+            self.status_label.remove_css_class("success")
+            self.status_label.remove_css_class("error")
+
+    def _on_save(self, btn):
+        client_id = self.client_id_row.get_text().strip()
+        client_secret = self.client_secret_row.get_text().strip()
+
+        if not client_id or not client_secret:
+            self.status_label.set_label("⚠ Both Client ID and Client Secret are required")
+            self.status_label.add_css_class("error")
+            self.status_label.remove_css_class("success")
+            return
+
+        ok = self.auth_manager.save_custom_credentials(client_id, client_secret)
+        if ok:
+            self.status_label.set_label("✓ Credentials saved successfully")
+            self.status_label.add_css_class("success")
+            self.status_label.remove_css_class("error")
+        else:
+            self.status_label.set_label("✗ Failed to save credentials — check logs")
+            self.status_label.add_css_class("error")
+            self.status_label.remove_css_class("success")
+
+    def _on_clear(self, btn):
+        ok = self.auth_manager.clear_custom_credentials()
+        if ok:
+            self.client_id_row.set_text("")
+            self.client_secret_row.set_text("")
+            self.status_label.set_label("Credentials cleared — using rclone defaults")
+            self.status_label.remove_css_class("success")
+            self.status_label.remove_css_class("error")
+        else:
+            self.status_label.set_label("✗ Failed to clear credentials — check logs")
+            self.status_label.add_css_class("error")
+            self.status_label.remove_css_class("success")
+
+
 class CyswlltWindow(Adw.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self.set_default_size(400, 350)
         self.set_title("Cyswllt")
-        
+
         self.auth_manager = AuthManager()
         self.mount_manager = MountManager(AuthManager.REMOTE_NAME)
 
@@ -40,10 +186,11 @@ class CyswlltWindow(Adw.ApplicationWindow):
         help_button.set_tooltip_text("Help & Usage")
         header.pack_end(help_button)
 
-        # Menu Button in Header
+        # Menu Button in Header — now includes Performance Settings
         menu = Gio.Menu()
+        menu.append("Performance Settings", "app.performance")
         menu.append("About Cyswllt", "app.about")
-        
+
         menu_button = Gtk.MenuButton()
         menu_button.set_icon_name("open-menu-symbolic")
         menu_button.set_menu_model(menu)
@@ -56,25 +203,17 @@ class CyswlltWindow(Adw.ApplicationWindow):
         box.set_margin_start(24)
         box.set_margin_end(24)
         box.set_valign(Gtk.Align.CENTER)
-        
-        # Add box to a clamp or scroll view if needed, but for now direct is fine
-        # We wrap it in a window content to be safe
         content.set_content(box)
 
         # Drive Icon
-        # Locate icon relative to this script
-        # structure is src/cyswllt/main.py -> need ../../data/icons/cyswllt.png
-        import os
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         icon_path = os.path.join(base_dir, "data", "icons", "cyswllt.png")
-        
+
         if os.path.exists(icon_path):
-             self.icon_image = Gtk.Image.new_from_file(icon_path)
+            self.icon_image = Gtk.Image.new_from_file(icon_path)
         else:
-             # Fallback to theme icon if file not found
-             self.icon_image = Gtk.Image.new_from_icon_name("drive-harddisk-symbolic")
-             # Try to set pixel size just in case
-             
+            self.icon_image = Gtk.Image.new_from_icon_name("drive-harddisk-symbolic")
+
         self.icon_image.set_pixel_size(96)
         self.icon_image.add_css_class("drive-icon")
         box.append(self.icon_image)
@@ -83,7 +222,7 @@ class CyswlltWindow(Adw.ApplicationWindow):
         self.status_label = Gtk.Label(label="Checking status...")
         self.status_label.add_css_class("title-2")
         box.append(self.status_label)
-        
+
         # Sub-status label
         self.sub_status_label = Gtk.Label(label="")
         box.append(self.sub_status_label)
@@ -94,11 +233,11 @@ class CyswlltWindow(Adw.ApplicationWindow):
         self.connect_button.add_css_class("pill")
         self.connect_button.set_action_name("app.connect")
         box.append(self.connect_button)
-        
+
         # Spinner
         self.spinner = Gtk.Spinner()
         box.append(self.spinner)
-        
+
         # Initial check
         self.check_status()
 
@@ -144,8 +283,10 @@ class CyswlltWindow(Adw.ApplicationWindow):
 
 class CyswlltApp(Adw.Application):
     def __init__(self):
-        super().__init__(application_id='com.taliskerman.cyswllt',
-                         flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE)
+        super().__init__(
+            application_id='com.taliskerman.cyswllt',
+            flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+        )
 
     def do_command_line(self, command_line):
         self.activate()
@@ -159,14 +300,11 @@ class CyswlltApp(Adw.Application):
 
     def do_startup(self):
         Adw.Application.do_startup(self)
-        
-        # Add local icon directory to theme search path so "cyswllt" icon name resolves
-        # This works for both dev (relative) and installed (/usr/share/icons/...) if we set it up right
-        # For installed, it should be in standard path, but for dev or if cache is broken, this helps.
-        import os
+
+        # Add local icon directory to theme search path
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         icon_dir = os.path.join(base_dir, "data", "icons")
-        
+
         if os.path.exists(icon_dir):
             display = Gdk.Display.get_default()
             if display:
@@ -177,7 +315,7 @@ class CyswlltApp(Adw.Application):
         connect_action = Gio.SimpleAction.new("connect", None)
         connect_action.connect("activate", self.on_connect)
         self.add_action(connect_action)
-        
+
         about_action = Gio.SimpleAction.new("about", None)
         about_action.connect("activate", self.on_about)
         self.add_action(about_action)
@@ -186,29 +324,44 @@ class CyswlltApp(Adw.Application):
         help_action.connect("activate", self.on_help)
         self.add_action(help_action)
 
+        performance_action = Gio.SimpleAction.new("performance", None)
+        performance_action.connect("activate", self.on_performance)
+        self.add_action(performance_action)
+
+    def on_performance(self, action, param):
+        """Opens the Performance Settings dialog."""
+        win = self.props.active_window
+        if not win:
+            return
+        dialog = PerformanceDialog(auth_manager=win.auth_manager, transient_for=win)
+        dialog.present()
+
     def on_help(self, action, param):
         win = self.props.active_window
         if not win:
             return
-            
+
         dialog = Adw.MessageDialog(
             transient_for=win,
             heading="How to use Cyswllt",
-            body="1. Click 'Connect' or 'Sign in with Google' to start authentication.\n"
-                 "2. A browser window will open. Allow access to your Google Drive.\n"
-                 "3. Once authenticated, your Drive will be mounted locally.\n"
-                 "4. You can access your files through your file manager.\n"
-                 "5. Click 'Disconnect' when you are finished to unmount the drive."
+            body=(
+                "1. Click 'Connect' or 'Sign in with Google' to start authentication.\n"
+                "2. A browser window will open. Allow access to your Google Drive.\n"
+                "3. Once authenticated, your Drive will be mounted locally.\n"
+                "4. You can access your files through your file manager.\n"
+                "5. Click 'Disconnect' when you are finished to unmount the drive.\n\n"
+                "Tip: Open the menu and choose 'Performance Settings' to add your "
+                "own Google Client ID for faster connections."
+            ),
         )
         dialog.add_response("ok", "Got it")
         dialog.present()
 
     def on_about(self, action, param):
         win = self.props.active_window
-        
+
         from cyswllt.version import __version__
-        
-        # Create Adw.AboutWindow
+
         about = Adw.AboutWindow(
             transient_for=win,
             application_name="Cyswllt",
@@ -218,13 +371,8 @@ class CyswlltApp(Adw.Application):
             copyright="© 2026 Chuck Talk, Nordheim Online, LLC",
             license_type=Gtk.License.GPL_3_0,
             website="https://nordheim.online",
-            issue_url="https://github.com/TaliskerMan/Cyswllt/issues"
+            issue_url="https://github.com/TaliskerMan/Cyswllt/issues",
         )
-        
-        # We rely on Gtk.IconTheme finding "cyswllt" now.
-        
-        about.present()
-
         about.present()
 
     def on_connect(self, action, param):
@@ -232,34 +380,31 @@ class CyswlltApp(Adw.Application):
         if not win:
             return
 
-        # Determine current state to know what action to take
         is_auth = win.auth_manager.is_authenticated()
         is_mounted = win.mount_manager.is_mounted()
-        
+
         win.update_ui_state(loading=True)
 
         def worker():
             if is_mounted:
-                # Disconnect -> Unmount
                 GLib.idle_add(lambda: win.status_label.set_label("Disconnecting..."))
                 success = win.mount_manager.unmount()
                 if not success:
                     logging.error("Failed to unmount")
             elif is_auth:
-                # Authenticated but not mounted -> Mount
                 GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
                 success = win.mount_manager.mount()
             else:
-                # Not authenticated -> Authenticate
                 GLib.idle_add(lambda: win.status_label.set_label("Waiting for browser auth..."))
                 success = win.auth_manager.start_authentication()
                 if success:
-                     GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
-                     success = win.mount_manager.mount()
+                    GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
+                    success = win.mount_manager.mount()
 
             GLib.idle_add(win.check_status)
 
         threading.Thread(target=worker, daemon=True).start()
+
 
 def setup_logging():
     log_dir = os.path.expanduser("~/.cache/cyswllt")
@@ -283,14 +428,16 @@ def setup_logging():
     logging.basicConfig(
         filename=log_file,
         level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
     logging.info("Cyswllt Application Started")
+
 
 def main():
     setup_logging()
     app = CyswlltApp()
     return app.run(sys.argv)
+
 
 if __name__ == '__main__':
     sys.exit(main())

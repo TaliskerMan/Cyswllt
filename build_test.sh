@@ -1,6 +1,10 @@
 #!/bin/bash
 set -euo pipefail
 
+# Auto-increment version/build number
+python3 "/Users/charlestalk/AntiGravity/workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
 # Fetch ShadowAgent Ground Rules dynamically based on framework configuration
 echo "Verifying ShadowAgent configuration..."
 SHADOW_AGENT_PORT="8080"
