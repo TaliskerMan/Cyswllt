@@ -68,13 +68,6 @@ Categories=FileManager;
             return False
 
         try:
-<<<<<<< HEAD
-            # We run rclone mount in the background
-            # Optimized for Google Drive performance:
-            # - vfs-cache-mode full: caches reads/writes for local-like performance
-            # - dir-cache-time: caches directory listings to speed up rendering
-            # - vfs-read-chunk-size: downloads faster
-=======
             # Performance-optimised rclone mount flags:
             #
             # --vfs-cache-mode full
@@ -95,7 +88,14 @@ Categories=FileManager;
             # --daemon
             #   Detach and run as a background daemon so the mount persists
             #   after Cyswllt's process exits.
->>>>>>> c732038 (Save artifacts and plans)
+            from .auth_manager import AuthManager
+            auth = AuthManager()
+            creds = auth.get_custom_credentials()
+            env = os.environ.copy()
+            if creds:
+                env["RCLONE_DRIVE_CLIENT_ID"] = creds["client_id"]
+                env["RCLONE_DRIVE_CLIENT_SECRET"] = creds["client_secret"]
+
             subprocess.Popen(
                 [
                     rclone_path, "mount",
@@ -105,12 +105,9 @@ Categories=FileManager;
                     "--dir-cache-time", "72h",
                     "--vfs-read-chunk-size", "128M",
                     "--vfs-cache-max-size", "10G",
-<<<<<<< HEAD
-                    "--daemon" # Run as daemon so it persists
-=======
-                    "--daemon",
->>>>>>> c732038 (Save artifacts and plans)
-                ]
+                    "--daemon"
+                ],
+                env=env
             )
 
             # Wait up to 5 seconds for the mount to initialise

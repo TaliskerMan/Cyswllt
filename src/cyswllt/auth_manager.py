@@ -164,17 +164,17 @@ class AuthManager:
             # available we pass them via --client-id / --client-secret so
             # that the resulting token is bound to the private application.
             authorize_cmd = [rclone_path, "authorize", "drive"]
+            env = os.environ.copy()
             if creds:
-                authorize_cmd += [
-                    "--client-id", creds["client_id"],
-                    "--client-secret", creds["client_secret"],
-                ]
+                env["RCLONE_DRIVE_CLIENT_ID"] = creds["client_id"]
+                env["RCLONE_DRIVE_CLIENT_SECRET"] = creds["client_secret"]
 
             result = subprocess.run(
                 authorize_cmd,
                 capture_output=True,
                 text=True,
                 check=True,
+                env=env,
             )
 
             output = result.stdout.strip()
@@ -203,13 +203,8 @@ class AuthManager:
                 f"token={token_json}",
                 "config_is_local=false",
             ]
-            if creds:
-                config_cmd += [
-                    f"client_id={creds['client_id']}",
-                    f"client_secret={creds['client_secret']}",
-                ]
 
-            subprocess.run(config_cmd, check=True, capture_output=True)
+            subprocess.run(config_cmd, check=True, capture_output=True, env=env)
             return True
 
         except subprocess.CalledProcessError as e:
