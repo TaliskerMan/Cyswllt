@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Auto-increment version/build number
-python3 "/Users/charlestalk/AntiGravity/workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+python3 "/home/freecode/antigrav/workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 
 # Fetch ShadowAgent Ground Rules dynamically
@@ -93,7 +93,7 @@ gpg --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
 echo "Committing and tagging..."
 git add .
 git commit -m "Release v$NEW_VERSION"
-git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-git push origin HEAD "v$NEW_VERSION"
+# git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+# git push origin HEAD "v$NEW_VERSION"
 
 echo "Release $NEW_VERSION completed successfully!"
