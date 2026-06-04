@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:7393ee0f-0d3b-47b3-8d4a-4c513f013566",
+  "serialNumber": "urn:uuid:ead44535-5630-4179-a745-bec219da4c47",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-04-06T21:24:12+00:00",
+    "timestamp": "2026-05-28T12:37:31Z",
     "tools": {
       "components": [
         {
@@ -20,23 +20,20 @@
       ]
     },
     "component": {
-      "bom-ref": "20b0bfca-9175-4664-99e3-2ffb618d91b8",
+      "bom-ref": "1613d6cb-60de-4e08-8a61-715cd1078684",
       "type": "application",
-      "name": ".",
-      "properties": [
-        {
-          "name": "aquasecurity:trivy:SchemaVersion",
-          "value": "2"
-        }
-      ]
+      "name": "cyswllt",
+      "version": "0.1.18-1"
     }
   },
-  "components": [],
-  "dependencies": [
+  "components": [
     {
-      "ref": "20b0bfca-9175-4664-99e3-2ffb618d91b8",
-      "dependsOn": []
+      "type": "library",
+      "name": "PyGObject",
+      "version": "3.42.0",
+      "purl": "pkg:pypi/PyGObject@3.42.0"
     }
   ],
+  "dependencies": [],
   "vulnerabilities": []
 }
