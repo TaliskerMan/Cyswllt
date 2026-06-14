@@ -26,6 +26,13 @@ class PerformanceDialog(Adw.PreferencesWindow):
     """
 
     def __init__(self, auth_manager: AuthManager, transient_for=None):
+        """
+        Initializes the PerformanceSettings dialog.
+
+        Args:
+            auth_manager (AuthManager): Authorization coordinator instance.
+            transient_for (Gtk.Window): Parent transient window.
+        """
         super().__init__(transient_for=transient_for, modal=True)
         self.auth_manager = auth_manager
         self.set_title("Performance Settings")
@@ -119,6 +126,9 @@ class PerformanceDialog(Adw.PreferencesWindow):
         self._refresh_status()
 
     def _refresh_status(self):
+        """
+        Refreshes status label based on the presence of custom OAuth credentials.
+        """
         if self.auth_manager.has_custom_credentials():
             self.status_label.set_label("✓ Custom credentials are active")
             self.status_label.add_css_class("success")
@@ -129,6 +139,9 @@ class PerformanceDialog(Adw.PreferencesWindow):
             self.status_label.remove_css_class("error")
 
     def _on_save(self, btn):
+        """
+        Saves the custom Client ID and Secret to disk when save is clicked.
+        """
         client_id = self.client_id_row.get_text().strip()
         client_secret = self.client_secret_row.get_text().strip()
 
@@ -149,6 +162,9 @@ class PerformanceDialog(Adw.PreferencesWindow):
             self.status_label.remove_css_class("success")
 
     def _on_clear(self, btn):
+        """
+        Deletes custom OAuth credentials and resets dialog entry fields.
+        """
         ok = self.auth_manager.clear_custom_credentials()
         if ok:
             self.client_id_row.set_text("")
@@ -163,7 +179,16 @@ class PerformanceDialog(Adw.PreferencesWindow):
 
 
 class CyswlltWindow(Adw.ApplicationWindow):
+    """
+    Main application window of the Cyswllt client interface.
+
+    Initializes layout components, toolbar headers, status displays, connect buttons, 
+    and loading spinners.
+    """
     def __init__(self, *args, **kwargs):
+        """
+        Initializes the application window.
+        """
         super().__init__(*args, **kwargs)
 
         self.set_default_size(400, 350)
@@ -242,7 +267,10 @@ class CyswlltWindow(Adw.ApplicationWindow):
         self.check_status()
 
     def check_status(self):
-        """Checks authentication and mount status and updates UI."""
+        """
+        Inspects current Google Drive authentication and local mounting states,
+        updating window status badges and labels.
+        """
         is_auth = self.auth_manager.is_authenticated()
         if is_auth:
             if self.mount_manager.is_mounted():
@@ -253,7 +281,10 @@ class CyswlltWindow(Adw.ApplicationWindow):
             self.update_ui_state(authenticated=False, mounted=False)
 
     def update_ui_state(self, authenticated=False, mounted=False, loading=False):
-        """Updates labels and button text based on state."""
+        """
+        Manipulates window layout elements (spinners, button states, drive icons) 
+        according to the current connection progress.
+        """
         if loading:
             self.spinner.start()
             self.connect_button.set_sensitive(False)
@@ -282,23 +313,40 @@ class CyswlltWindow(Adw.ApplicationWindow):
 
 
 class CyswlltApp(Adw.Application):
+    """
+    The Libadwaita Application manager coordinating application command-line arguments,
+    activations, and action triggers.
+    """
     def __init__(self):
+        """
+        Initializes the application instance.
+        """
         super().__init__(
             application_id='com.taliskerman.cyswllt',
             flags=Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
         )
 
     def do_command_line(self, command_line):
+        """
+        Handles command-line arguments by redirecting to standard activation.
+        """
         self.activate()
         return 0
 
     def do_activate(self):
+        """
+        Triggers window instantiation when the application starts or is activated.
+        """
         win = self.props.active_window
         if not win:
             win = CyswlltWindow(application=self)
         win.present()
 
     def do_startup(self):
+        """
+        Initializes application resources, mapping custom asset paths and registering
+        global action callbacks (connect, about, help, performance settings).
+        """
         Adw.Application.do_startup(self)
 
         # Add local icon directory to theme search path
@@ -329,7 +377,9 @@ class CyswlltApp(Adw.Application):
         self.add_action(performance_action)
 
     def on_performance(self, action, param):
-        """Opens the Performance Settings dialog."""
+        """
+        Action callback to display the Performance Settings dialog.
+        """
         win = self.props.active_window
         if not win:
             return
@@ -337,6 +387,9 @@ class CyswlltApp(Adw.Application):
         dialog.present()
 
     def on_help(self, action, param):
+        """
+        Action callback to display the How-to usage instructions dialog.
+        """
         win = self.props.active_window
         if not win:
             return
@@ -358,6 +411,9 @@ class CyswlltApp(Adw.Application):
         dialog.present()
 
     def on_about(self, action, param):
+        """
+        Action callback to display the application Credits / AboutWindow metadata.
+        """
         win = self.props.active_window
 
         from cyswllt.version import __version__
@@ -376,6 +432,11 @@ class CyswlltApp(Adw.Application):
         about.present()
 
     def on_connect(self, action, param):
+        """
+        Action callback to run connect/disconnect workflows in a separate thread.
+        
+        Mounts existing remotes, unmounts mounted ones, or starts browser-based OAuth flows.
+        """
         win = self.props.active_window
         if not win:
             return
@@ -407,6 +468,10 @@ class CyswlltApp(Adw.Application):
 
 
 def setup_logging():
+    """
+    Sets up application file logging under ~/.cache/cyswllt/cyswllt.log,
+    enforcing tight 0o600 file permission attributes.
+    """
     log_dir = os.path.expanduser("~/.cache/cyswllt")
     os.makedirs(log_dir, mode=0o700, exist_ok=True)
     os.chmod(log_dir, 0o700) # Enforce tight permissions if already exists
@@ -434,6 +499,9 @@ def setup_logging():
 
 
 def main():
+    """
+    The main execution entry point for the Cyswllt binary.
+    """
     setup_logging()
     app = CyswlltApp()
     return app.run(sys.argv)

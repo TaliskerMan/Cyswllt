@@ -26,6 +26,9 @@ class AuthManager:
     REMOTE_NAME = "cyswllt_gdrive"
 
     def __init__(self):
+        """
+        Initializes the AuthManager instance.
+        """
         pass
 
     # ------------------------------------------------------------------
@@ -34,9 +37,11 @@ class AuthManager:
 
     def get_custom_credentials(self):
         """
-        Returns the stored custom Client ID and Secret as a dict
-        ``{"client_id": "...", "client_secret": "..."}`` or ``None`` if
-        no credentials have been saved yet.
+        Returns the stored custom Client ID and Secret as a dict.
+
+        Returns:
+            dict: Custom credentials dictionary `{"client_id": "...", "client_secret": "..."}`,
+                  or `None` if credentials file doesn't exist or is invalid.
         """
         if not os.path.exists(_CREDENTIALS_FILE):
             return None
@@ -53,7 +58,13 @@ class AuthManager:
         """
         Persists the user's custom Google OAuth credentials to disk.
 
-        Returns ``True`` on success, ``False`` on failure.
+        Args:
+            client_id (str): The Google Cloud Client ID string.
+            client_secret (str): The Google Cloud Client Secret string.
+
+        Returns:
+            bool: True on success, False on failure. Saves configuration to
+                  ~/.config/cyswllt/google_credentials.json with strict 0o600 permissions.
         """
         client_id = client_id.strip()
         client_secret = client_secret.strip()
@@ -73,9 +84,10 @@ class AuthManager:
 
     def clear_custom_credentials(self) -> bool:
         """
-        Removes any stored custom Google OAuth credentials.
+        Removes any stored custom Google OAuth credentials from disk.
 
-        Returns ``True`` on success (or if the file did not exist).
+        Returns:
+            bool: True on success or if the file was already absent, False on error.
         """
         if not os.path.exists(_CREDENTIALS_FILE):
             return True
@@ -88,7 +100,12 @@ class AuthManager:
             return False
 
     def has_custom_credentials(self) -> bool:
-        """Returns ``True`` if valid custom credentials are on disk."""
+        """
+        Checks if valid custom credentials exist on disk.
+
+        Returns:
+            bool: True if Client ID and Secret exist, False otherwise.
+        """
         return self.get_custom_credentials() is not None
 
     # ------------------------------------------------------------------
@@ -96,7 +113,12 @@ class AuthManager:
     # ------------------------------------------------------------------
 
     def is_rclone_installed(self):
-        """Checks if rclone is installed/available in PATH."""
+        """
+        Checks if rclone is installed and available in the system PATH.
+
+        Returns:
+            bool: True if installed and responds to version query, False otherwise.
+        """
         rclone_path = shutil.which("rclone")
         if not rclone_path:
             return False
@@ -112,7 +134,12 @@ class AuthManager:
             return False
 
     def is_authenticated(self):
-        """Checks if the remote is already configured."""
+        """
+        Checks if the custom Cyswllt remote is already configured in rclone.
+
+        Returns:
+            bool: True if the remote cyswllt_gdrive is configured, False otherwise.
+        """
         rclone_path = shutil.which("rclone")
         if not rclone_path:
             return False
@@ -129,15 +156,14 @@ class AuthManager:
 
     def start_authentication(self):
         """
-        Starts the OAuth authentication flow via ``rclone authorize``.
+        Starts the Google Drive OAuth flow using rclone authorize.
 
-        If custom credentials are stored they are injected into the
-        ``rclone authorize`` call so that Google uses the private Client ID
-        rather than rclone's shared one.  The resulting token is then used
-        to create (or overwrite) the rclone remote, also tagged with the
-        custom Client ID/Secret when available.
+        Launches the authentication web page. If custom credentials exist, they
+        are injected. Once the token is returned, configures the cyswllt_gdrive remote.
+        This is a blocking call and must be executed in a worker thread.
 
-        This is a blocking call — run it from a background thread.
+        Returns:
+            bool: True if authentication succeeded and remote was created, False otherwise.
         """
         rclone_path = shutil.which("rclone")
         if not rclone_path:
@@ -217,7 +243,12 @@ class AuthManager:
             return False
 
     def delete_remote(self):
-        """Removes the remote configuration."""
+        """
+        Deletes the configured cyswllt_gdrive remote from the rclone configuration.
+
+        Returns:
+            bool: True if deletion succeeded, False otherwise.
+        """
         rclone_path = shutil.which("rclone")
         if not rclone_path:
             return False

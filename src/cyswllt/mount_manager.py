@@ -10,21 +10,40 @@ import time
 
 class MountManager:
     """
-    Manages mounting and unmounting of the Google Drive remote.
+    Manages mounting and unmounting operations for Google Drive storage remotes via rclone.
     """
     def __init__(self, remote_name):
+        """
+        Initializes the MountManager instance.
+
+        Args:
+            remote_name (str): The name of the configured rclone remote (e.g. cyswllt_gdrive).
+        """
         self.remote_name = remote_name
         self.mount_point = os.path.expanduser("~/GoogleDrive")
 
     def is_mounted(self):
-        """Checks if the mount point is currently mounted."""
+        """
+        Checks if the Google Drive remote is currently mounted.
+
+        Returns:
+            bool: True if the mount point directory is active, False otherwise.
+        """
         return os.path.ismount(self.mount_point)
 
     def _get_desktop_file_path(self):
+        """
+        Resolves the file path where the Desktop launcher (.desktop) is located.
+
+        Returns:
+            str: Absolute path to the launcher file.
+        """
         return os.path.expanduser("~/Desktop/google-drive.desktop")
 
     def _create_desktop_file(self):
-        """Creates a .desktop file for DING to show the mount."""
+        """
+        Creates a local Desktop entry file to allow file managers to access the mounted Drive.
+        """
         desktop_file = self._get_desktop_file_path()
         content = f"""[Desktop Entry]
 Type=Application
@@ -45,7 +64,9 @@ Categories=FileManager;
             logging.error(f"Failed to create desktop file: {e}")
 
     def _remove_desktop_file(self):
-        """Removes the .desktop file."""
+        """
+        Deletes the local Desktop entry file when Drive unmounts.
+        """
         desktop_file = self._get_desktop_file_path()
         if os.path.exists(desktop_file):
             try:
@@ -54,7 +75,15 @@ Categories=FileManager;
                 logging.error(f"Failed to remove desktop file: {e}")
 
     def mount(self):
-        """Mounts the remote to ~/GoogleDrive with optimised VFS caching flags."""
+        """
+        Mounts the remote to the mount point with VFS caching.
+
+        Spawns rclone in a daemon thread. Wait loops for up to 5 seconds to verify
+        that mounting succeeded before adding the Desktop entry launcher.
+
+        Returns:
+            bool: True if mounting succeeded, False on error or timeout.
+        """
         if not os.path.exists(self.mount_point):
             os.makedirs(self.mount_point, mode=0o700)
 
@@ -125,7 +154,15 @@ Categories=FileManager;
             return False
 
     def unmount(self):
-        """Unmounts the remote."""
+        """
+        Unmounts the remote Google Drive filesystem.
+
+        Calls fusermount or fusermount3 depending on availability, then cleans up
+        the Desktop entry launcher.
+
+        Returns:
+            bool: True if unmounting succeeded, False on error.
+        """
         if not self.is_mounted():
             self._remove_desktop_file()
             return True
