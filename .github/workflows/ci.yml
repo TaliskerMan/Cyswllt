@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test + GTK introspection deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gir1.2-gtk-4.0 gir1.2-adw-1 python3-gi
+          python -m pip install --upgrade pip pytest ruff
+
+      - name: Lint
+        run: ruff check src tests || true
+
+      - name: Run tests
+        run: PYTHONPATH=src python -m pytest tests -q
+
+      - name: Verify the documented run command imports
+        run: PYTHONPATH=src python -c "import cyswllt.__main__"

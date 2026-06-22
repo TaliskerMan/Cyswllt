@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
+# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC <chuck@nordheim.online>
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
@@ -154,6 +154,31 @@ class AuthManager:
         except subprocess.CalledProcessError:
             return False
 
+    @staticmethod
+    def extract_token_json(output: str) -> str:
+        """
+        Extracts the OAuth token JSON object from rclone authorize stdout.
+
+        rclone surrounds the token with human-readable text, so we pull the first
+        ``{...}`` block; if none is found we treat the whole output as the
+        candidate. The candidate is validated as JSON before being returned.
+
+        Args:
+            output (str): Raw stdout from ``rclone authorize``.
+
+        Returns:
+            str: The token JSON string.
+
+        Raises:
+            ValueError: If no valid JSON token can be extracted.
+        """
+        text = (output or "").strip()
+        match = re.search(r'(\{.*\})', text, re.DOTALL)
+        candidate = match.group(0) if match else text
+        # Raises json.JSONDecodeError (a ValueError subclass) on malformed input.
+        json.loads(candidate)
+        return candidate
+
     def start_authentication(self):
         """
         Starts the Google Drive OAuth flow using rclone authorize.
@@ -186,12 +211,17 @@ class AuthManager:
         try:
             logging.info("Starting authorization...")
 
-            # Build the authorize command.  When custom credentials are
-            # available we pass them via --client-id / --client-secret so
-            # that the resulting token is bound to the private application.
+            # Build the authorize command.  rclone's `authorize` subcommand takes
+            # the client id/secret as POSITIONAL arguments
+            # (`rclone authorize drive <client_id> <client_secret>`); it does not
+            # read the RCLONE_DRIVE_* backend env vars at this step.  Passing them
+            # positionally is what actually binds the user's private Client ID at
+            # sign-in, so they avoid the shared rate limits during the OAuth
+            # handshake.  We also keep the env vars set for any downstream calls.
             authorize_cmd = [rclone_path, "authorize", "drive"]
             env = os.environ.copy()
             if creds:
+                authorize_cmd += [creds["client_id"], creds["client_secret"]]
                 env["RCLONE_DRIVE_CLIENT_ID"] = creds["client_id"]
                 env["RCLONE_DRIVE_CLIENT_SECRET"] = creds["client_secret"]
 
@@ -203,32 +233,25 @@ class AuthManager:
                 env=env,
             )
 
-            output = result.stdout.strip()
-
-            # rclone prints the JSON token somewhere in stdout — extract it.
-            match = re.search(r'(\{.*\})', output, re.DOTALL)
-            if not match:
-                try:
-                    json.loads(output)
-                    token_json = output
-                except json.JSONDecodeError:
-                    raise Exception("Could not find token JSON in rclone authorize output")
-            else:
-                token_json = match.group(0)
-
-            # Validate the token is parseable JSON before proceeding.
-            json.loads(token_json)
+            # rclone prints the JSON token somewhere in stdout — extract + validate it.
+            token_json = self.extract_token_json(result.stdout)
 
             logging.info(f"Token received.  Configuring remote '{self.REMOTE_NAME}'...")
 
-            # Build the config create command.  Mirror the Client ID/Secret
-            # into the remote config so every future rclone call uses them.
+            # Build the config create command.  Write the Client ID/Secret
+            # directly into the remote config (not just via env) so every future
+            # rclone call against this remote uses the private credentials.
             config_cmd = [
                 rclone_path, "config", "create",
                 self.REMOTE_NAME, "drive",
                 f"token={token_json}",
                 "config_is_local=false",
             ]
+            if creds:
+                config_cmd += [
+                    f"client_id={creds['client_id']}",
+                    f"client_secret={creds['client_secret']}",
+                ]
 
             subprocess.run(config_cmd, check=True, capture_output=True, env=env)
             return True

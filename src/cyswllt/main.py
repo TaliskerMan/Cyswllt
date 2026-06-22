@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC
+# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC <chuck@nordheim.online>
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
@@ -270,15 +270,40 @@ class CyswlltWindow(Adw.ApplicationWindow):
         """
         Inspects current Google Drive authentication and local mounting states,
         updating window status badges and labels.
+
+        The underlying checks shell out to rclone, which can be slow to start, so
+        they run on a worker thread; the UI is updated via ``GLib.idle_add`` to
+        avoid stuttering the GTK main loop on launch.
         """
-        is_auth = self.auth_manager.is_authenticated()
-        if is_auth:
-            if self.mount_manager.is_mounted():
-                self.update_ui_state(mounted=True)
-            else:
-                self.update_ui_state(authenticated=True, mounted=False)
-        else:
-            self.update_ui_state(authenticated=False, mounted=False)
+        self.update_ui_state(loading=True)
+
+        def worker():
+            is_auth = self.auth_manager.is_authenticated()
+            is_mounted = self.mount_manager.is_mounted() if is_auth else False
+
+            def apply():
+                if is_auth and is_mounted:
+                    self.update_ui_state(mounted=True)
+                elif is_auth:
+                    self.update_ui_state(authenticated=True, mounted=False)
+                else:
+                    self.update_ui_state(authenticated=False, mounted=False)
+                return False
+
+            GLib.idle_add(apply)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def show_unmount_error(self, message):
+        """Surfaces an unmount failure to the user via a modal dialog."""
+        dialog = Adw.MessageDialog(
+            transient_for=self,
+            heading="Could not disconnect",
+            body=message,
+        )
+        dialog.add_response("ok", "OK")
+        dialog.present()
+        return False
 
     def update_ui_state(self, authenticated=False, mounted=False, loading=False):
         """
@@ -451,7 +476,9 @@ class CyswlltApp(Adw.Application):
                 GLib.idle_add(lambda: win.status_label.set_label("Disconnecting..."))
                 success = win.mount_manager.unmount()
                 if not success:
-                    logging.error("Failed to unmount")
+                    err = win.mount_manager.last_unmount_error or "Unmount failed."
+                    logging.error("Failed to unmount: %s", err)
+                    GLib.idle_add(lambda e=err: win.show_unmount_error(e))
             elif is_auth:
                 GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
                 success = win.mount_manager.mount()

@@ -1,4 +1,4 @@
-# Copyright (C) 2026 Chuck Talk <chuck@nordheim.online>
+# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC <chuck@nordheim.online>
 # This file is part of Cyswllt.
 # Released under the GNU GPL v3 license.
 
@@ -21,6 +21,8 @@ class MountManager:
         """
         self.remote_name = remote_name
         self.mount_point = os.path.expanduser("~/GoogleDrive")
+        # Human-readable reason the last unmount failed, for the UI to surface.
+        self.last_unmount_error = None
 
     def is_mounted(self):
         """
@@ -50,7 +52,7 @@ Type=Application
 Name=Google Drive
 Comment=Mounted Google Drive
 Icon=drive-harddisk
-Exec=nautilus "{self.mount_point}"
+Exec=xdg-open "{self.mount_point}"
 Terminal=false
 Categories=FileManager;
 """
@@ -163,22 +165,41 @@ Categories=FileManager;
         Returns:
             bool: True if unmounting succeeded, False on error.
         """
+        self.last_unmount_error = None
+
         if not self.is_mounted():
             self._remove_desktop_file()
             return True
 
-        fuser_path = shutil.which("fusermount")
+        fuser_path = shutil.which("fusermount") or shutil.which("fusermount3")
         if not fuser_path:
-            fuser_path = shutil.which("fusermount3")
-
-        if not fuser_path:
-            logging.error("fusermount executable not found")
+            self.last_unmount_error = "fusermount executable not found."
+            logging.error(self.last_unmount_error)
             return False
 
         try:
-            subprocess.run([fuser_path, "-u", self.mount_point], check=True)
+            subprocess.run([fuser_path, "-u", self.mount_point],
+                           check=True, capture_output=True, text=True)
             self._remove_desktop_file()
             return True
         except subprocess.CalledProcessError as e:
-            logging.error(f"Unmount error: {e}")
-            return False
+            # A normal unmount usually fails because files are still open.
+            # Fall back to a lazy unmount (-uz), which detaches the filesystem
+            # and cleans up once the open handles are released.
+            logging.warning(
+                "Normal unmount failed (%s); attempting lazy unmount (-uz).",
+                (e.stderr or "").strip() or e,
+            )
+            try:
+                subprocess.run([fuser_path, "-uz", self.mount_point],
+                               check=True, capture_output=True, text=True)
+                self._remove_desktop_file()
+                return True
+            except subprocess.CalledProcessError as e2:
+                detail = ((e2.stderr or e.stderr or "").strip())
+                self.last_unmount_error = (
+                    "Could not unmount Google Drive — files may still be open. "
+                    + (detail or "Close any apps using the drive and try again.")
+                )
+                logging.error(self.last_unmount_error)
+                return False
