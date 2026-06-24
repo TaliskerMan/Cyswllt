@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Auto-increment version/build number
-python3 "/home/freecode/antigrav/workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+python3 "\${SCRIPT_DIR}/../workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 
 # Fetch ShadowAgent Ground Rules dynamically
