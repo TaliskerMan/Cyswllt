@@ -62,8 +62,8 @@ Categories=FileManager;
             mode = 0o700
             with open(desktop_file, "w", opener=lambda path, flags: os.open(path, flags, mode)) as f:
                 f.write(content)
-        except Exception as e:
-            logging.error(f"Failed to create desktop file: {e}")
+        except Exception as error:
+            logging.error(f"Failed to create desktop file: {error}")
 
     def _remove_desktop_file(self):
         """
@@ -73,8 +73,8 @@ Categories=FileManager;
         if os.path.exists(desktop_file):
             try:
                 os.remove(desktop_file)
-            except Exception as e:
-                logging.error(f"Failed to remove desktop file: {e}")
+            except Exception as error:
+                logging.error(f"Failed to remove desktop file: {error}")
 
     def mount(self):
         """
@@ -151,8 +151,8 @@ Categories=FileManager;
             logging.error("Mount timed out — rclone daemon did not mount in time")
             return False
 
-        except Exception as e:
-            logging.error(f"Mount error: {e}")
+        except Exception as error:
+            logging.error(f"Mount error: {error}")
             return False
 
     def unmount(self):
@@ -182,21 +182,21 @@ Categories=FileManager;
                            check=True, capture_output=True, text=True)
             self._remove_desktop_file()
             return True
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as error:
             # A normal unmount usually fails because files are still open.
             # Fall back to a lazy unmount (-uz), which detaches the filesystem
             # and cleans up once the open handles are released.
             logging.warning(
                 "Normal unmount failed (%s); attempting lazy unmount (-uz).",
-                (e.stderr or "").strip() or e,
+                (error.stderr or "").strip() or error,
             )
             try:
                 subprocess.run([fuser_path, "-uz", self.mount_point],
                                check=True, capture_output=True, text=True)
                 self._remove_desktop_file()
                 return True
-            except subprocess.CalledProcessError as e2:
-                detail = ((e2.stderr or e.stderr or "").strip())
+            except subprocess.CalledProcessError as error_secondary:
+                detail = ((error_secondary.stderr or error.stderr or "").strip())
                 self.last_unmount_error = (
                     "Could not unmount Google Drive — files may still be open. "
                     + (detail or "Close any apps using the drive and try again.")

@@ -77,8 +77,8 @@ class TestExtractTokenJson:
         assert json.loads(token)["access_token"] == "ya29.abc"
 
     def test_accepts_bare_json(self):
-        out = '{"access_token":"t","token_type":"Bearer"}'
-        assert json.loads(AuthManager.extract_token_json(out))["token_type"] == "Bearer"
+        stdout_text = '{"access_token":"t","token_type":"Bearer"}'
+        assert json.loads(AuthManager.extract_token_json(stdout_text))["token_type"] == "Bearer"
 
     def test_raises_on_no_json(self):
         with pytest.raises(ValueError):

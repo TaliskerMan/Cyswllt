@@ -138,7 +138,7 @@ class PerformanceDialog(Adw.PreferencesWindow):
             self.status_label.remove_css_class("success")
             self.status_label.remove_css_class("error")
 
-    def _on_save(self, btn):
+    def _on_save(self, _button):
         """
         Saves the custom Client ID and Secret to disk when save is clicked.
         """
@@ -161,7 +161,7 @@ class PerformanceDialog(Adw.PreferencesWindow):
             self.status_label.add_css_class("error")
             self.status_label.remove_css_class("success")
 
-    def _on_clear(self, btn):
+    def _on_clear(self, _button):
         """
         Deletes custom OAuth credentials and resets dialog entry fields.
         """
@@ -362,10 +362,10 @@ class CyswlltApp(Adw.Application):
         """
         Triggers window instantiation when the application starts or is activated.
         """
-        win = self.props.active_window
-        if not win:
-            win = CyswlltWindow(application=self)
-        win.present()
+        window = self.props.active_window
+        if not window:
+            window = CyswlltWindow(application=self)
+        window.present()
 
     def do_startup(self):
         """
@@ -405,22 +405,22 @@ class CyswlltApp(Adw.Application):
         """
         Action callback to display the Performance Settings dialog.
         """
-        win = self.props.active_window
-        if not win:
+        window = self.props.active_window
+        if not window:
             return
-        dialog = PerformanceDialog(auth_manager=win.auth_manager, transient_for=win)
+        dialog = PerformanceDialog(auth_manager=window.auth_manager, transient_for=window)
         dialog.present()
 
     def on_help(self, action, param):
         """
         Action callback to display the How-to usage instructions dialog.
         """
-        win = self.props.active_window
-        if not win:
+        window = self.props.active_window
+        if not window:
             return
 
         dialog = Adw.MessageDialog(
-            transient_for=win,
+            transient_for=window,
             heading="How to use Cyswllt",
             body=(
                 "1. Click 'Connect' or 'Sign in with Google' to start authentication.\n"
@@ -439,12 +439,12 @@ class CyswlltApp(Adw.Application):
         """
         Action callback to display the application Credits / AboutWindow metadata.
         """
-        win = self.props.active_window
+        window = self.props.active_window
 
         from cyswllt.version import __version__
 
         about = Adw.AboutWindow(
-            transient_for=win,
+            transient_for=window,
             application_name="Cyswllt",
             application_icon="noln",
             developer_name="Chuck Talk",
@@ -462,34 +462,34 @@ class CyswlltApp(Adw.Application):
         
         Mounts existing remotes, unmounts mounted ones, or starts browser-based OAuth flows.
         """
-        win = self.props.active_window
-        if not win:
+        window = self.props.active_window
+        if not window:
             return
 
-        is_auth = win.auth_manager.is_authenticated()
-        is_mounted = win.mount_manager.is_mounted()
+        is_auth = window.auth_manager.is_authenticated()
+        is_mounted = window.mount_manager.is_mounted()
 
-        win.update_ui_state(loading=True)
+        window.update_ui_state(loading=True)
 
         def worker():
             if is_mounted:
-                GLib.idle_add(lambda: win.status_label.set_label("Disconnecting..."))
-                success = win.mount_manager.unmount()
+                GLib.idle_add(lambda: window.status_label.set_label("Disconnecting..."))
+                success = window.mount_manager.unmount()
                 if not success:
-                    err = win.mount_manager.last_unmount_error or "Unmount failed."
-                    logging.error("Failed to unmount: %s", err)
-                    GLib.idle_add(lambda e=err: win.show_unmount_error(e))
+                    error_msg = window.mount_manager.last_unmount_error or "Unmount failed."
+                    logging.error("Failed to unmount: %s", error_msg)
+                    GLib.idle_add(lambda error=error_msg: window.show_unmount_error(error))
             elif is_auth:
-                GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
-                success = win.mount_manager.mount()
+                GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
+                success = window.mount_manager.mount()
             else:
-                GLib.idle_add(lambda: win.status_label.set_label("Waiting for browser auth..."))
-                success = win.auth_manager.start_authentication()
+                GLib.idle_add(lambda: window.status_label.set_label("Waiting for browser auth..."))
+                success = window.auth_manager.start_authentication()
                 if success:
-                    GLib.idle_add(lambda: win.status_label.set_label("Connecting..."))
-                    success = win.mount_manager.mount()
+                    GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
+                    success = window.mount_manager.mount()
 
-            GLib.idle_add(win.check_status)
+            GLib.idle_add(window.check_status)
 
         threading.Thread(target=worker, daemon=True).start()
 

@@ -46,12 +46,12 @@ class AuthManager:
         if not os.path.exists(_CREDENTIALS_FILE):
             return None
         try:
-            with open(_CREDENTIALS_FILE, "r") as f:
-                data = json.load(f)
+            with open(_CREDENTIALS_FILE, "r") as file:
+                data = json.load(file)
             if data.get("client_id") and data.get("client_secret"):
                 return data
-        except Exception as e:
-            logging.error(f"Failed to read credentials file: {e}")
+        except Exception as error:
+            logging.error(f"Failed to read credentials file: {error}")
         return None
 
     def save_custom_credentials(self, client_id: str, client_secret: str) -> bool:
@@ -73,13 +73,13 @@ class AuthManager:
             return False
         try:
             os.makedirs(os.path.dirname(_CREDENTIALS_FILE), exist_ok=True)
-            with open(_CREDENTIALS_FILE, "w") as f:
-                json.dump({"client_id": client_id, "client_secret": client_secret}, f)
+            with open(_CREDENTIALS_FILE, "w") as file:
+                json.dump({"client_id": client_id, "client_secret": client_secret}, file)
             os.chmod(_CREDENTIALS_FILE, 0o600)  # owner read/write only
             logging.info("Custom Google credentials saved.")
             return True
-        except Exception as e:
-            logging.error(f"Failed to save credentials: {e}")
+        except Exception as error:
+            logging.error(f"Failed to save credentials: {error}")
             return False
 
     def clear_custom_credentials(self) -> bool:
@@ -95,8 +95,8 @@ class AuthManager:
             os.remove(_CREDENTIALS_FILE)
             logging.info("Custom Google credentials cleared.")
             return True
-        except Exception as e:
-            logging.error(f"Failed to clear credentials: {e}")
+        except Exception as error:
+            logging.error(f"Failed to clear credentials: {error}")
             return False
 
     def has_custom_credentials(self) -> bool:
@@ -256,13 +256,13 @@ class AuthManager:
             subprocess.run(config_cmd, check=True, capture_output=True, env=env)
             return True
 
-        except subprocess.CalledProcessError as e:
-            logging.error(f"Rclone error: {e}")
-            if e.stderr:
-                logging.error(f"Stderr: {e.stderr}")
+        except subprocess.CalledProcessError as error:
+            logging.error(f"Rclone error: {error}")
+            if error.stderr:
+                logging.error(f"Stderr: {error.stderr}")
             return False
-        except Exception as e:
-            logging.error(f"Auth error: {e}")
+        except Exception as error:
+            logging.error(f"Auth error: {error}")
             return False
 
     def delete_remote(self):
