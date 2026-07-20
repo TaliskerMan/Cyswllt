@@ -18,6 +18,7 @@ fi
 
 # Configuration
 VERSION_FILE="src/cyswllt/version.py"
+# shellcheck disable=SC2034
 PLAN_FILE="CyswlltPlan.md"
 ARTIFACTS_DIR="artifacts"
 GPG_KEY="chuck@nordheim.online"
