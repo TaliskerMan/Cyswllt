@@ -2,4 +2,4 @@
 Defines the Cyswllt application version number.
 """
 
-__version__ = "0.1.19"
+__version__ = "1.0.1"

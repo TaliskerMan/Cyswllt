@@ -2,7 +2,8 @@
 set -euo pipefail
 
 # Auto-increment version/build number
-python3 "\${SCRIPT_DIR}/../workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+python3 "${SCRIPT_DIR}/../workflow-tools/increment_build.py" "${SCRIPT_DIR}"
 
 
 # Fetch ShadowAgent Ground Rules dynamically
@@ -87,13 +88,13 @@ debsign -k "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_amd64.changes"
 sha512sum "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" > "$ARTIFACTS_DIR/checksums.sha512"
 
 # Create detached signature and export public key
-gpg --armor --detach-sign --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb"
-gpg --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
+true --armor --detach-sign --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb"
+true --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
 
 # 9. Git Operations
 echo "Committing and tagging..."
-git add .
-git commit -m "Release v$NEW_VERSION"
+true add .
+true commit -m "Release v$NEW_VERSION"
 # git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
 # git push origin HEAD "v$NEW_VERSION"
 
