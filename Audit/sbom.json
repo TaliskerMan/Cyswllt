@@ -1,1 +1,39 @@
-{"$schema":"http://cyclonedx.org/schema/bom-1.7.schema.json","bomFormat":"CycloneDX","specVersion":"1.7","serialNumber":"urn:uuid:35602d2f-0824-4f82-b79c-ba641eedf069","version":1,"metadata":{"timestamp":"2026-07-20T17:08:49Z","tools":{"components":[{"type":"application","author":"anchore","name":"syft","version":"1.48.0"}]},"component":{"bom-ref":"dfcd457ff0b35452","type":"file","name":"/src"}},"components":[{"bom-ref":"pkg:github/actions/checkout@v4?package-id=fa2e67b8c20f75f3","type":"library","name":"actions/checkout","version":"v4","cpe":"cpe:2.3:a:actions\\/checkout:actions\\/checkout:v4:*:*:*:*:*:*:*","purl":"pkg:github/actions/checkout@v4","properties":[{"name":"syft:package:foundBy","value":"github-actions-usage-cataloger"},{"name":"syft:package:type","value":"github-action"},{"name":"syft:package:metadataType","value":"github-actions-use-statement"},{"name":"syft:location:0:path","value":"/.github/workflows/ci.yml"}]},{"bom-ref":"pkg:github/actions/setup-python@v5?package-id=0ac68409cceaeece","type":"library","name":"actions/setup-python","version":"v5","cpe":"cpe:2.3:a:actions\\/setup-python:actions\\/setup-python:v5:*:*:*:*:*:*:*","purl":"pkg:github/actions/setup-python@v5","properties":[{"name":"syft:package:foundBy","value":"github-actions-usage-cataloger"},{"name":"syft:package:type","value":"github-action"},{"name":"syft:package:metadataType","value":"github-actions-use-statement"},{"name":"syft:cpe23","value":"cpe:2.3:a:actions\\/setup-python:actions\\/setup_python:v5:*:*:*:*:*:*:*"},{"name":"syft:cpe23","value":"cpe:2.3:a:actions\\/setup_python:actions\\/setup-python:v5:*:*:*:*:*:*:*"},{"name":"syft:cpe23","value":"cpe:2.3:a:actions\\/setup_python:actions\\/setup_python:v5:*:*:*:*:*:*:*"},{"name":"syft:cpe23","value":"cpe:2.3:a:actions\\/setup:actions\\/setup-python:v5:*:*:*:*:*:*:*"},{"name":"syft:cpe23","value":"cpe:2.3:a:actions\\/setup:actions\\/setup_python:v5:*:*:*:*:*:*:*"},{"name":"syft:location:0:path","value":"/.github/workflows/ci.yml"}]},{"bom-ref":"7561d461b00ff11d","type":"file","name":"/src/.github/workflows/ci.yml","hashes":[{"alg":"SHA-1","content":"48c2a641be66c1fa9b20ffa3be589a6b27ded618"},{"alg":"SHA-256","content":"855794ecb9f7beeff16d820f09992dc1078133f2d7ff2cc24187e590f1e52325"}]}]}
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:23f12797-ef2c-4509-8296-e4b9db415451",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-20T19:02:11Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "manufacturer": {
+            "name": "Aqua Security Software Ltd."
+          },
+          "group": "aquasecurity",
+          "name": "trivy",
+          "version": "0.69.3"
+        }
+      ]
+    },
+    "component": {
+      "bom-ref": "e1c2bcc7-1aeb-47e8-809c-3f0d434eb174",
+      "type": "application",
+      "name": "cyswllt",
+      "version": "1.0.3-1"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "PyGObject",
+      "version": "3.42.0",
+      "purl": "pkg:pypi/PyGObject@3.42.0"
+    }
+  ],
+  "dependencies": [],
+  "vulnerabilities": []
+}

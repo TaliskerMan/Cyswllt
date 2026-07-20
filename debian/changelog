@@ -1,3 +1,15 @@
+cyswllt (1.0.3-1) unstable; urgency=medium
+
+  * Release v1.0.3
+
+ -- Chuck Talk <chuck@nordheim.online>  Mon, 20 Jul 2026 14:02:06 -0500
+
+cyswllt (1.0.2) unstable; urgency=medium
+
+  * Release 1.0.2 auto-incremented by build helper script (Rule_017)
+
+ -- Chuck Talk <chuck@nordheim.online>  Mon, 20 Jul 2026 14:02:06 -0500
+
 cyswllt (1.0.1) unstable; urgency=medium
 
   * Release 1.0.1 auto-incremented by build helper script (Rule_017)
