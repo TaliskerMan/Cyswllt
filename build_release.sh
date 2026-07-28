@@ -88,14 +88,22 @@ debsign -k "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_amd64.changes"
 sha512sum "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" > "$ARTIFACTS_DIR/checksums.sha512"
 
 # Create detached signature and export public key
-true --armor --detach-sign --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb"
-true --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
+gpg --armor --detach-sign --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" || true
+gpg --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
 
-# 9. Git Operations
-echo "Committing and tagging..."
-true add .
-true commit -m "Release v$NEW_VERSION"
-# git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-# git push origin HEAD "v$NEW_VERSION"
+# 9. Copy to NOBuilds directory
+DATE_STR=$(date +%m-%d-%Y)
+NOBUILDS_DIR="${HOME}/NOBuilds/Cyswllt-${DATE_STR}-${NEW_VERSION}-1"
+mkdir -p "${NOBUILDS_DIR}"
+
+cp "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" "${NOBUILDS_DIR}/"
+cp "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb.asc" "${NOBUILDS_DIR}/" || true
+cp "$ARTIFACTS_DIR/checksums.sha512" "${NOBUILDS_DIR}/"
+cp "$ARTIFACTS_DIR/pubkey.asc" "${NOBUILDS_DIR}/"
+cp "$ARTIFACTS_DIR/cyswllt_$NEW_VERSION.orig.tar.gz" "${NOBUILDS_DIR}/cyswllt_source.tar.gz" || true
+cp LICENSE "${NOBUILDS_DIR}/"
+cp README.md "${NOBUILDS_DIR}/"
+cp Audit/sbom.json "${NOBUILDS_DIR}/" || true
 
 echo "Release $NEW_VERSION completed successfully!"
+echo "Published to: $NOBUILDS_DIR"
