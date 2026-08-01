@@ -27,3 +27,4 @@ debian/*.debhelper.log
 *.changes
 *.dsc
 *.orig.tar.gz
+sonar-project.properties
