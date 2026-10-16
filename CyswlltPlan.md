@@ -30,8 +30,10 @@
 
 ## Release History
 
-### Release 0.1.15 (Pending)
--   **Security**: Comprehensive security audit and hardening (file permissions tightened, logs secured).
+### Release 1.0.5 (2026-10-16)
+- **Claims vs Code Review**: Verified user guide against implementation; enforced FUSE requirement, robust mount error reporting, and upload-wait on disconnect.
+- **Security & Quality**: Clean pass across all SonarQube rules, ShellCheck, Semgrep, osv-scanner, syft CycloneDX SBOM, and grype CVE checks.
+- **Packaging & Release**: Built signed Debian package (v1.0.5-1), detached GPG signature, SHA512SUMS, and staged release artifacts.
 
 ## Release History
 

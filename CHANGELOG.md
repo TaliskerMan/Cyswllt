@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.5] - 2026-10-16
 
-### Fixed — claims vs code review (2026-10-16)
+### Fixed — claims vs code review & shift-left hardening (2026-10-16)
 - **Mount failures are reported.** A failed mount (FUSE missing, rclone error,
   slow network) silently returned to "Ready to Connect". Cyswllt now checks for
   FUSE first, waits up to 30 seconds (was 5), stops early if rclone exits with
@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `artifacts/…`, so `sha512sum -c` failed for users; it now uses the file name.
 - **Releases can't go out unsigned.** A failed GPG signature was ignored
   (`|| true`); it now stops the build.
+- **SonarQube & Shift-Left Gate Compliance:** Resolved cognitive complexity
+  thresholds in `main.py` and `mount_manager.py`, eliminated empty blocks,
+  standardized exception logging (`S8572`), refactored `build_guide.js`
+  to eliminate regex backtracking and modernize promises (`S7785`).
 - The repository's desktop file no longer contains developer-machine paths.
 - README: the desktop launcher needs a desktop that shows icons.
 

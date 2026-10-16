@@ -109,7 +109,11 @@ cp "$ARTIFACTS_DIR/pubkey.asc" "${NOBUILDS_DIR}/"
 cp "$ARTIFACTS_DIR/cyswllt_$NEW_VERSION.orig.tar.gz" "${NOBUILDS_DIR}/cyswllt_source.tar.gz" || true
 cp LICENSE "${NOBUILDS_DIR}/"
 cp README.md "${NOBUILDS_DIR}/"
+cp docs/Cyswllt_User_Guide.pdf "${NOBUILDS_DIR}/" || true
+cp docs/Cyswllt_User_Guide.pdf "${ARTIFACTS_DIR}/" || true
 cp Audit/sbom.json "${NOBUILDS_DIR}/" || true
+( cd "${NOBUILDS_DIR}" && rm -f SHA512SUMS && sha512sum * > SHA512SUMS )
+( cd "${ARTIFACTS_DIR}" && rm -f SHA512SUMS && sha512sum * > SHA512SUMS )
 
 echo "Release $NEW_VERSION completed successfully!"
 echo "Published to: $NOBUILDS_DIR"

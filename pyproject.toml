@@ -28,3 +28,7 @@ where = ["src"]
 
 [tool.setuptools.dynamic]
 version = { attr = "cyswllt.version.__version__" }
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

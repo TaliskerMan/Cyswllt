@@ -133,8 +133,8 @@ Categories=FileManager;
             mode = 0o700
             with open(desktop_file, "w", opener=lambda path, flags: os.open(path, flags, mode)) as f:
                 f.write(content)
-        except Exception as error:
-            logging.error(f"Failed to create desktop file: {error}")
+        except Exception:
+            logging.exception("Failed to create desktop file")
 
     def _remove_desktop_file(self):
         """
@@ -144,8 +144,8 @@ Categories=FileManager;
         if os.path.exists(desktop_file):
             try:
                 os.remove(desktop_file)
-            except Exception as error:
-                logging.error(f"Failed to remove desktop file: {error}")
+            except Exception:
+                logging.exception("Failed to remove desktop file")
 
     def mount(self):
         """
@@ -220,8 +220,8 @@ Categories=FileManager;
                         exist_ok=True)
             # Start each mount with a fresh log so old errors aren't reported.
             with open(RCLONE_LOG_FILE, "w", opener=lambda path, flags:
-                      os.open(path, flags, 0o600)):
-                pass
+                      os.open(path, flags, 0o600)) as log_init:
+                log_init.write("")
             # rclone's start-up output (e.g. a bad option) goes to a file, not
             # a pipe: with --daemon a background child could hold a pipe open
             # and block the read.
@@ -248,42 +248,46 @@ Categories=FileManager;
             )
             startup_err.close()  # the child has its own copy
 
-            deadline = time.monotonic() + MOUNT_TIMEOUT_SECONDS
-            while time.monotonic() < deadline:
-                if self.is_mounted():
-                    self._create_desktop_file()
-                    return True
-                code = process.poll()
-                if code not in (None, 0):
-                    # rclone exited with an error before mounting.
-                    try:
-                        with open(startup_err_path, "r",
-                                  errors="replace") as handle:
-                            startup = handle.read().strip()
-                    except OSError:
-                        startup = ""
-                    detail = self._rclone_log_tail() or startup[-1500:]
-                    self.last_mount_error = (
-                        "rclone couldn't mount Google Drive."
-                        + (f"\n\n{detail}" if detail else "")
-                    )
-                    logging.error(self.last_mount_error)
-                    return False
-                time.sleep(0.5)
-
-            detail = self._rclone_log_tail()
-            self.last_mount_error = (
-                f"Google Drive wasn't mounted after {MOUNT_TIMEOUT_SECONDS} "
-                "seconds. Check your internet connection and try again."
-                + (f"\n\n{detail}" if detail else "")
-            )
-            logging.error(self.last_mount_error)
-            return False
+            return self._wait_for_mount(process, startup_err_path)
 
         except Exception as error:
             self.last_mount_error = f"Mount error: {error}"
             logging.error(self.last_mount_error)
             return False
+
+    def _read_startup_err(self, startup_err_path: str) -> str:
+        try:
+            with open(startup_err_path, "r", errors="replace") as handle:
+                return handle.read().strip()
+        except OSError:
+            return ""
+
+    def _wait_for_mount(self, process, startup_err_path: str) -> bool:
+        deadline = time.monotonic() + MOUNT_TIMEOUT_SECONDS
+        while time.monotonic() < deadline:
+            if self.is_mounted():
+                self._create_desktop_file()
+                return True
+            code = process.poll()
+            if code not in (None, 0):
+                startup = self._read_startup_err(startup_err_path)
+                detail = self._rclone_log_tail() or startup[-1500:]
+                self.last_mount_error = (
+                    "rclone couldn't mount Google Drive."
+                    + (f"\n\n{detail}" if detail else "")
+                )
+                logging.error(self.last_mount_error)
+                return False
+            time.sleep(0.5)
+
+        detail = self._rclone_log_tail()
+        self.last_mount_error = (
+            f"Google Drive wasn't mounted after {MOUNT_TIMEOUT_SECONDS} "
+            "seconds. Check your internet connection and try again."
+            + (f"\n\n{detail}" if detail else "")
+        )
+        logging.error(self.last_mount_error)
+        return False
 
     def unmount(self):
         """

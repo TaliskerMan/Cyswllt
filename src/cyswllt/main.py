@@ -529,6 +529,47 @@ class CyswlltApp(Adw.Application):
         )
         about.present()
 
+    @staticmethod
+    def _report_mount_failure(window):
+        error_msg = (window.mount_manager.last_mount_error
+                     or "Google Drive could not be mounted.")
+        GLib.idle_add(lambda error=error_msg:
+                      window.show_error("Could not connect", error))
+
+    def _worker_disconnect(self, window):
+        GLib.idle_add(lambda: window.status_label.set_label("Disconnecting..."))
+        success = window.mount_manager.unmount()
+        if not success:
+            error_msg = window.mount_manager.last_unmount_error or "Unmount failed."
+            logging.error("Failed to unmount: %s", error_msg)
+            GLib.idle_add(lambda error=error_msg: window.show_unmount_error(error))
+
+    def _worker_mount(self, window):
+        GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
+        if not window.mount_manager.mount():
+            self._report_mount_failure(window)
+
+    def _worker_authenticate_and_mount(self, window):
+        GLib.idle_add(lambda: window.status_label.set_label("Waiting for browser auth..."))
+        if window.auth_manager.start_authentication():
+            GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
+            if not window.mount_manager.mount():
+                self._report_mount_failure(window)
+        else:
+            GLib.idle_add(lambda: window.show_error(
+                "Sign-in didn't complete",
+                "Google sign-in was cancelled or failed. Try again; "
+                "details are in ~/.cache/cyswllt/cyswllt.log."))
+
+    def _dispatch_worker(self, window, is_mounted: bool, is_auth: bool):
+        if is_mounted:
+            self._worker_disconnect(window)
+        elif is_auth:
+            self._worker_mount(window)
+        else:
+            self._worker_authenticate_and_mount(window)
+        GLib.idle_add(window.check_status)
+
     def on_connect(self, action, param):
         """
         Action callback to run connect/disconnect workflows in a separate thread.
@@ -542,41 +583,12 @@ class CyswlltApp(Adw.Application):
         is_auth = window.auth_manager.is_authenticated()
         is_mounted = window.mount_manager.is_mounted()
 
-        def report_mount_failure():
-            error_msg = (window.mount_manager.last_mount_error
-                         or "Google Drive could not be mounted.")
-            GLib.idle_add(lambda error=error_msg:
-                          window.show_error("Could not connect", error))
-
-        def worker():
-            if is_mounted:
-                GLib.idle_add(lambda: window.status_label.set_label("Disconnecting..."))
-                success = window.mount_manager.unmount()
-                if not success:
-                    error_msg = window.mount_manager.last_unmount_error or "Unmount failed."
-                    logging.error("Failed to unmount: %s", error_msg)
-                    GLib.idle_add(lambda error=error_msg: window.show_unmount_error(error))
-            elif is_auth:
-                GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
-                if not window.mount_manager.mount():
-                    report_mount_failure()
-            else:
-                GLib.idle_add(lambda: window.status_label.set_label("Waiting for browser auth..."))
-                if window.auth_manager.start_authentication():
-                    GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
-                    if not window.mount_manager.mount():
-                        report_mount_failure()
-                else:
-                    GLib.idle_add(lambda: window.show_error(
-                        "Sign-in didn't complete",
-                        "Google sign-in was cancelled or failed. Try again; "
-                        "details are in ~/.cache/cyswllt/cyswllt.log."))
-
-            GLib.idle_add(window.check_status)
-
         def start():
             window.update_ui_state(loading=True)
-            threading.Thread(target=worker, daemon=True).start()
+            threading.Thread(
+                target=lambda: self._dispatch_worker(window, is_mounted, is_auth),
+                daemon=True
+            ).start()
 
         if is_mounted:
             # Don't unmount while files are still uploading (see

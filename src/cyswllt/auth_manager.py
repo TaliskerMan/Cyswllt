@@ -50,8 +50,8 @@ class AuthManager:
                 data = json.load(file)
             if data.get("client_id") and data.get("client_secret"):
                 return data
-        except Exception as error:
-            logging.error(f"Failed to read credentials file: {error}")
+        except Exception:
+            logging.exception("Failed to read credentials file")
         return None
 
     def save_custom_credentials(self, client_id: str, client_secret: str) -> bool:
@@ -83,8 +83,8 @@ class AuthManager:
             os.chmod(_CREDENTIALS_FILE, 0o600)  # also tightens an existing file
             logging.info("Custom Google credentials saved.")
             return True
-        except Exception as error:
-            logging.error(f"Failed to save credentials: {error}")
+        except Exception:
+            logging.exception("Failed to save credentials")
             return False
 
     def clear_custom_credentials(self) -> bool:
@@ -100,8 +100,8 @@ class AuthManager:
             os.remove(_CREDENTIALS_FILE)
             logging.info("Custom Google credentials cleared.")
             return True
-        except Exception as error:
-            logging.error(f"Failed to clear credentials: {error}")
+        except Exception:
+            logging.exception("Failed to clear credentials")
             return False
 
     def has_custom_credentials(self) -> bool:
@@ -266,8 +266,8 @@ class AuthManager:
             if error.stderr:
                 logging.error(f"Stderr: {error.stderr}")
             return False
-        except Exception as error:
-            logging.error(f"Auth error: {error}")
+        except Exception:
+            logging.exception("Auth error")
             return False
 
     def delete_remote(self):
