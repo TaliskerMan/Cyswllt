@@ -11,7 +11,6 @@ override_dh_auto_install:
 	mkdir -p debian/cyswllt/usr/lib/cyswllt
 	mkdir -p debian/cyswllt/usr/bin
 	mkdir -p debian/cyswllt/usr/share/applications
-	mkdir -p debian/cyswllt/usr/share/icons/hicolor/256x256/apps
 	
 	# Copy source
 	cp -r src debian/cyswllt/usr/lib/cyswllt/
@@ -25,7 +24,12 @@ override_dh_auto_install:
 	
 	# Install Desktop file and Icon
 	cp data/com.taliskerman.cyswllt.desktop debian/cyswllt/usr/share/applications/
-	cp data/icons/cyswllt.png debian/cyswllt/usr/share/icons/hicolor/256x256/apps/com.taliskerman.cyswllt.png
+	# App icon at every standard size (square, from the 1024 px artwork)
+	for size in 512x512 256x256 128x128 64x64 48x48 32x32; do \
+		mkdir -p debian/cyswllt/usr/share/icons/hicolor/$$size/apps; \
+		cp data/icons/hicolor/$$size/apps/com.taliskerman.cyswllt.png \
+			debian/cyswllt/usr/share/icons/hicolor/$$size/apps/; \
+	done
 	
 	# Fix paths in desktop file
 	sed -i 's|Exec=.*|Exec=/usr/bin/cyswllt|' debian/cyswllt/usr/share/applications/com.taliskerman.cyswllt.desktop

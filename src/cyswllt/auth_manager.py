@@ -72,10 +72,15 @@ class AuthManager:
             logging.error("save_custom_credentials: client_id and client_secret must not be empty")
             return False
         try:
-            os.makedirs(os.path.dirname(_CREDENTIALS_FILE), exist_ok=True)
-            with open(_CREDENTIALS_FILE, "w") as file:
+            os.makedirs(os.path.dirname(_CREDENTIALS_FILE), mode=0o700,
+                        exist_ok=True)
+            # Create the file owner-only from the start (0o600). Writing it
+            # with default permissions and chmod-ing afterwards left the secret
+            # briefly readable by other local users.
+            with open(_CREDENTIALS_FILE, "w",
+                      opener=lambda path, flags: os.open(path, flags, 0o600)) as file:
                 json.dump({"client_id": client_id, "client_secret": client_secret}, file)
-            os.chmod(_CREDENTIALS_FILE, 0o600)  # owner read/write only
+            os.chmod(_CREDENTIALS_FILE, 0o600)  # also tightens an existing file
             logging.info("Custom Google credentials saved.")
             return True
         except Exception as error:

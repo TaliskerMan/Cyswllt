@@ -1,8 +1,8 @@
 [Desktop Entry]
 Name=Cyswllt
 Comment=Mount Google Drive
-Exec=python3 /home/freecode/antigrav/Cyswllt/src/cyswllt/main.py
-Icon=/home/freecode/antigrav/Cyswllt/data/icons/cyswllt.png
+Exec=cyswllt
+Icon=com.taliskerman.cyswllt
 Terminal=false
 StartupNotify=true
 Type=Application

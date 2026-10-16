@@ -294,6 +294,79 @@ class CyswlltWindow(Adw.ApplicationWindow):
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def show_error(self, heading, message):
+        """Shows an error to the user in a modal dialog."""
+        dialog = Adw.MessageDialog(
+            transient_for=self,
+            heading=heading,
+            body=message,
+        )
+        dialog.add_response("ok", "OK")
+        dialog.present()
+        return False
+
+    @staticmethod
+    def _uploads_body(count):
+        """Dialog text for files still uploading."""
+        files = "1 file" if count == 1 else f"{count} files"
+        return (
+            f"{files} copied to Google Drive {'is' if count == 1 else 'are'} "
+            "still uploading. Cyswllt will disconnect as soon as the upload "
+            "finishes.\n\n"
+            "If you disconnect now, those files stay on this computer and "
+            "upload the next time you connect. They are not on Google Drive "
+            "until then."
+        )
+
+    def disconnect_when_uploaded(self, proceed):
+        """
+        Calls ``proceed`` (which unmounts) once rclone has no uploads pending.
+
+        If files are still uploading, shows a "Finishing uploads" dialog that
+        updates every 2 seconds and disconnects automatically when they're
+        done, with "Stay Connected" and "Disconnect Anyway" choices.
+        """
+        pending = self.mount_manager.pending_uploads()
+        if pending == 0:
+            proceed()
+            return
+
+        dialog = Adw.MessageDialog(
+            transient_for=self,
+            heading="Finishing uploads…",
+            body=self._uploads_body(pending),
+        )
+        dialog.add_response("keep", "Stay Connected")
+        dialog.add_response("force", "Disconnect Anyway")
+        dialog.set_response_appearance(
+            "force", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("keep")
+        dialog.set_close_response("keep")
+        state = {"active": True}
+
+        def poll():
+            if not state["active"]:
+                return False
+            count = self.mount_manager.pending_uploads()
+            if count == 0:
+                state["active"] = False
+                dialog.close()
+                proceed()
+                return False
+            dialog.set_body(self._uploads_body(count))
+            return True
+
+        def on_response(_dialog, response):
+            if not state["active"]:
+                return
+            state["active"] = False
+            if response == "force":
+                proceed()
+
+        dialog.connect("response", on_response)
+        GLib.timeout_add_seconds(2, poll)
+        dialog.present()
+
     def show_unmount_error(self, message):
         """Surfaces an unmount failure to the user via a modal dialog."""
         dialog = Adw.MessageDialog(
@@ -446,7 +519,7 @@ class CyswlltApp(Adw.Application):
         about = Adw.AboutWindow(
             transient_for=window,
             application_name="Cyswllt",
-            application_icon="noln",
+            application_icon="com.taliskerman.cyswllt",
             developer_name="Chuck Talk",
             version=__version__,
             copyright="© 2026 Chuck Talk, Nordheim Online, LLC",
@@ -469,7 +542,11 @@ class CyswlltApp(Adw.Application):
         is_auth = window.auth_manager.is_authenticated()
         is_mounted = window.mount_manager.is_mounted()
 
-        window.update_ui_state(loading=True)
+        def report_mount_failure():
+            error_msg = (window.mount_manager.last_mount_error
+                         or "Google Drive could not be mounted.")
+            GLib.idle_add(lambda error=error_msg:
+                          window.show_error("Could not connect", error))
 
         def worker():
             if is_mounted:
@@ -481,17 +558,32 @@ class CyswlltApp(Adw.Application):
                     GLib.idle_add(lambda error=error_msg: window.show_unmount_error(error))
             elif is_auth:
                 GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
-                success = window.mount_manager.mount()
+                if not window.mount_manager.mount():
+                    report_mount_failure()
             else:
                 GLib.idle_add(lambda: window.status_label.set_label("Waiting for browser auth..."))
-                success = window.auth_manager.start_authentication()
-                if success:
+                if window.auth_manager.start_authentication():
                     GLib.idle_add(lambda: window.status_label.set_label("Connecting..."))
-                    success = window.mount_manager.mount()
+                    if not window.mount_manager.mount():
+                        report_mount_failure()
+                else:
+                    GLib.idle_add(lambda: window.show_error(
+                        "Sign-in didn't complete",
+                        "Google sign-in was cancelled or failed. Try again; "
+                        "details are in ~/.cache/cyswllt/cyswllt.log."))
 
             GLib.idle_add(window.check_status)
 
-        threading.Thread(target=worker, daemon=True).start()
+        def start():
+            window.update_ui_state(loading=True)
+            threading.Thread(target=worker, daemon=True).start()
+
+        if is_mounted:
+            # Don't unmount while files are still uploading (see
+            # disconnect_when_uploaded); proceeds immediately if none are.
+            window.disconnect_when_uploaded(start)
+        else:
+            start()
 
 
 def setup_logging():

@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+### Fixed — claims vs code review (2026-10-16)
+- **Mount failures are reported.** A failed mount (FUSE missing, rclone error,
+  slow network) silently returned to "Ready to Connect". Cyswllt now checks for
+  FUSE first, waits up to 30 seconds (was 5), stops early if rclone exits with
+  an error, keeps rclone's log (`~/.cache/cyswllt/rclone.log`, owner-only) and
+  shows the reason in a dialog. A failed Google sign-in is reported too.
+- **Disconnect waits for uploads.** With rclone's full write cache, files copied
+  into the drive upload in the background; disconnecting early left them only
+  in the local cache. Disconnect now shows "Finishing uploads…" with the count
+  (from rclone's cache metadata) and disconnects when they're done, with "Stay
+  Connected" and "Disconnect Anyway" choices.
+- **FUSE is a package dependency** (`fuse3 | fuse`); rclone's package doesn't
+  pull it in, and mounting can't work without it.
+- **About window icon.** It asked for an icon named `noln` that isn't
+  installed, so About showed a broken image.
+- **App icon.** The icon carried an image-generator watermark (✦) and was a
+  175 px image installed as 256×256. It's now cleaned from the 1024 px artwork,
+  rounded, and installed at 512, 256, 128, 64, 48 and 32 px.
+- **Credentials file** is created owner-only (0600) from the start; it was
+  briefly readable by other users before being restricted.
+- **Release checksums verify.** `checksums.sha512` named the package as
+  `artifacts/…`, so `sha512sum -c` failed for users; it now uses the file name.
+- **Releases can't go out unsigned.** A failed GPG signature was ignored
+  (`|| true`); it now stops the build.
+- The repository's desktop file no longer contains developer-machine paths.
+- README: the desktop launcher needs a desktop that shows icons.
+
 ### Fixed
 - **Custom Client ID now binds at sign-in:** `rclone authorize drive` receives
   the user's Client ID/Secret as positional arguments (rclone does not read the

@@ -85,10 +85,16 @@ echo "Signing and hashing..."
 # debsign might be interactive if gpg requires passphrase. 
 # We assume the user has gpg agent set up or will enter it.
 debsign -k "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_amd64.changes"
-sha512sum "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" > "$ARTIFACTS_DIR/checksums.sha512"
+# Name the .deb by its bare file name so users can run `sha512sum -c
+# checksums.sha512` next to the download (an "artifacts/..." path failed).
+(cd "$ARTIFACTS_DIR" && sha512sum "cyswllt_${NEW_VERSION}-1_all.deb" > checksums.sha512)
 
-# Create detached signature and export public key
-gpg --armor --detach-sign --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" || true
+# Create detached signature and export public key. A failed signature stops
+# the build: the release must not go out unsigned (it used `|| true`).
+if ! gpg --armor --detach-sign --yes --default-key "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb"; then
+    echo "ERROR: GPG signing failed; release not built." >&2
+    exit 1
+fi
 gpg --armor --export "$GPG_KEY" > "$ARTIFACTS_DIR/pubkey.asc"
 
 # 9. Copy to NOBuilds directory
@@ -97,7 +103,7 @@ NOBUILDS_DIR="${HOME}/NOBuilds/Cyswllt-${DATE_STR}-${NEW_VERSION}-1"
 mkdir -p "${NOBUILDS_DIR}"
 
 cp "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" "${NOBUILDS_DIR}/"
-cp "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb.asc" "${NOBUILDS_DIR}/" || true
+cp "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb.asc" "${NOBUILDS_DIR}/"
 cp "$ARTIFACTS_DIR/checksums.sha512" "${NOBUILDS_DIR}/"
 cp "$ARTIFACTS_DIR/pubkey.asc" "${NOBUILDS_DIR}/"
 cp "$ARTIFACTS_DIR/cyswllt_$NEW_VERSION.orig.tar.gz" "${NOBUILDS_DIR}/cyswllt_source.tar.gz" || true
