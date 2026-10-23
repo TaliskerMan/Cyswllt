@@ -16,10 +16,10 @@ override_dh_auto_install:
 	cp -r src debian/cyswllt/usr/lib/cyswllt/
 	cp -r data debian/cyswllt/usr/lib/cyswllt/
 	
-	# Install launcher script
+	# Install launcher script (escape $$@ so Makefile does not substitute the target name) (CP-ChangeComments)
 	echo '#!/bin/bash' > debian/cyswllt/usr/bin/cyswllt
 	echo 'export PYTHONPATH=/usr/lib/cyswllt/src' >> debian/cyswllt/usr/bin/cyswllt
-	echo 'exec python3 /usr/lib/cyswllt/src/cyswllt/main.py "$@"' >> debian/cyswllt/usr/bin/cyswllt
+	echo 'exec python3 /usr/lib/cyswllt/src/cyswllt/main.py "$$@"' >> debian/cyswllt/usr/bin/cyswllt
 	chmod +x debian/cyswllt/usr/bin/cyswllt
 	
 	# Install Desktop file and Icon
