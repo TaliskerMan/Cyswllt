@@ -1,6 +1,6 @@
 title: Cyswllt
 subtitle: Installation and User Guide
-version: 1.0.5
+version: 1.0.6
 platforms: Linux (GNOME and other GTK desktops)
 ## About Cyswllt
 

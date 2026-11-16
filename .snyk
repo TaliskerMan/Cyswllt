@@ -1,0 +1,11 @@
+# Snyk (https://snyk.io) policy file
+version: v1.25.0
+exclude:
+  global:
+    - Audit/**
+    - artifacts/**
+    - debian/**
+    - build/**
+    - dist/**
+    - .venv/**
+    - venv/**

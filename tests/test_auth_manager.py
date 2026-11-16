@@ -1,89 +1,141 @@
-# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC <chuck@nordheim.online>
-# This file is part of Cyswllt.
+# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC.
 # Released under the GNU GPL v3 license.
 
-"""Unit tests for the credential handling and token extraction in AuthManager.
+"""Unit tests for AuthManager token extraction and credential validation."""
 
-These cover the logic most worth protecting in a tool that handles OAuth tokens,
-without touching the real ~/.config or invoking rclone.
-"""
+import configparser
+import os
+import subprocess
+from unittest.mock import MagicMock, patch
 
-import json
-import pytest
-
-from cyswllt import auth_manager
-from cyswllt.auth_manager import AuthManager
-
-
-@pytest.fixture
-def temp_credentials(tmp_path, monkeypatch):
-    """Point the module's credentials file at a temp location."""
-    cred_file = tmp_path / "google_credentials.json"
-    monkeypatch.setattr(auth_manager, "_CREDENTIALS_FILE", str(cred_file))
-    return cred_file
-
-
-def test_save_get_has_clear_round_trip(temp_credentials):
-    am = AuthManager()
-    assert am.has_custom_credentials() is False
-    assert am.get_custom_credentials() is None
-
-    assert am.save_custom_credentials("id-123", "secret-xyz") is True
-    assert temp_credentials.exists()
-    # Saved with owner-only permissions.
-    assert (temp_credentials.stat().st_mode & 0o777) == 0o600
-
-    creds = am.get_custom_credentials()
-    assert creds == {"client_id": "id-123", "client_secret": "secret-xyz"}
-    assert am.has_custom_credentials() is True
-
-    assert am.clear_custom_credentials() is True
-    assert am.has_custom_credentials() is False
-    # Clearing an already-absent file is success, not error.
-    assert am.clear_custom_credentials() is True
-
-
-def test_save_rejects_empty_or_whitespace_input(temp_credentials):
-    am = AuthManager()
-    assert am.save_custom_credentials("", "secret") is False
-    assert am.save_custom_credentials("id", "   ") is False
-    assert am.save_custom_credentials("   ", "   ") is False
-    assert not temp_credentials.exists()
-
-
-def test_save_strips_surrounding_whitespace(temp_credentials):
-    am = AuthManager()
-    assert am.save_custom_credentials("  id-1  ", "\tsecret-1\n") is True
-    assert am.get_custom_credentials() == {
-        "client_id": "id-1",
-        "client_secret": "secret-1",
-    }
-
-
-def test_get_returns_none_on_corrupt_file(temp_credentials):
-    temp_credentials.write_text("not json {{{")
-    assert AuthManager().get_custom_credentials() is None
+from cyswllt.auth_manager import AuthManager, is_valid_oauth_credential
 
 
 class TestExtractTokenJson:
-    def test_extracts_json_embedded_in_human_text(self):
-        output = (
-            "If your browser doesn't open automatically go to ...\n"
+    def test_pure_json(self):
+        raw = '{"access_token":"abc","token_type":"Bearer","expiry":"2026-01-01T00:00:00Z"}'
+        assert AuthManager.extract_token_json(raw) == raw
+
+    def test_json_wrapped_in_rclone_banner(self):
+        banner = (
             "Paste the following into your remote machine --->\n"
-            '{"access_token":"ya29.abc","token_type":"Bearer","expiry":"2026-01-01"}\n'
+            '{"access_token":"xyz","refresh_token":"ref"}\n'
             "<---End paste\n"
         )
-        token = AuthManager.extract_token_json(output)
-        assert json.loads(token)["access_token"] == "ya29.abc"
+        assert (
+            AuthManager.extract_token_json(banner)
+            == '{"access_token":"xyz","refresh_token":"ref"}'
+        )
 
-    def test_accepts_bare_json(self):
-        stdout_text = '{"access_token":"t","token_type":"Bearer"}'
-        assert json.loads(AuthManager.extract_token_json(stdout_text))["token_type"] == "Bearer"
+    def test_multiline_pretty_json_in_banner(self):
+        banner = 'Header line\n{\n  "access_token": "tok",\n  "expiry": "soon"\n}\nFooter'
+        extracted = AuthManager.extract_token_json(banner)
+        assert extracted is not None
+        assert '"access_token": "tok"' in extracted
 
-    def test_raises_on_no_json(self):
-        with pytest.raises(ValueError):
-            AuthManager.extract_token_json("Failed: could not authorize, try again")
+    def test_no_json_returns_none(self):
+        assert AuthManager.extract_token_json("nothing useful here") is None
 
-    def test_raises_on_empty(self):
-        with pytest.raises(ValueError):
-            AuthManager.extract_token_json("")
+    def test_empty_output_returns_none(self):
+        assert AuthManager.extract_token_json("") is None
+        assert AuthManager.extract_token_json("   \n  ") is None
+
+    def test_malformed_braces_returns_none(self):
+        assert AuthManager.extract_token_json("{not: valid json}") is None
+
+
+class TestCredentialValidationAndAuthFlow:
+    def test_is_valid_oauth_credential_accepts_valid_tokens(self):
+        assert is_valid_oauth_credential("123456-abcdef.apps.googleusercontent.com")
+        assert is_valid_oauth_credential("GOCSPX-abcDEF_1234567890")
+
+    def test_is_valid_oauth_credential_rejects_flag_injection_and_bad_inputs(self):
+        assert not is_valid_oauth_credential("--config=/tmp/evil.conf")
+        assert not is_valid_oauth_credential("-v")
+        assert not is_valid_oauth_credential("")
+        assert not is_valid_oauth_credential("   ")
+        assert not is_valid_oauth_credential(None)
+        assert not is_valid_oauth_credential("bad space")
+        assert not is_valid_oauth_credential("bad\nnewline")
+
+    def test_save_and_get_custom_credentials(self, tmp_path):
+        mgr = AuthManager()
+        with patch.object(mgr, "get_config_dir", return_value=str(tmp_path)):
+            assert mgr.save_custom_credentials(
+                "123456-abc.apps.googleusercontent.com",
+                "GOCSPX-secret_value_123",
+            )
+            creds = mgr.get_custom_credentials()
+            assert creds == {
+                "client_id": "123456-abc.apps.googleusercontent.com",
+                "client_secret": "GOCSPX-secret_value_123",
+            }
+
+            # Reject leading hyphen (CWE-88 argument injection attempt)
+            assert not mgr.save_custom_credentials("--evil-flag", "GOCSPX-secret_value_123")
+
+    def test_start_authentication_uses_env_and_persists_rclone_conf(self, tmp_path):
+        mgr = AuthManager()
+        conf_dir = tmp_path / "cyswllt"
+        conf_dir.mkdir()
+        rclone_conf = tmp_path / "rclone.conf"
+
+        with (
+            patch.object(mgr, "get_rclone_path", return_value="/usr/bin/rclone"),
+            patch.object(mgr, "get_config_dir", return_value=str(conf_dir)),
+            patch.object(mgr, "get_rclone_config_file", return_value=str(rclone_conf)),
+            patch("cyswllt.auth_manager.subprocess.run") as mock_run,
+        ):
+            mgr.save_custom_credentials(
+                "123456-abc.apps.googleusercontent.com",
+                "GOCSPX-secret_value_123",
+            )
+            auth_proc = MagicMock(
+                stdout='{"access_token":"tok123","token_type":"Bearer"}',
+                stderr="",
+            )
+            cfg_proc = MagicMock(stdout="", stderr="")
+            mock_run.side_effect = [auth_proc, cfg_proc]
+
+            assert mgr.start_authentication() is True
+            assert mock_run.call_count == 2
+
+            # Verify client_id and client_secret were NOT passed in CLI argv
+            auth_call_args = mock_run.call_args_list[0]
+            assert auth_call_args.args[0] == ["/usr/bin/rclone", "authorize", "drive"]
+            assert (
+                auth_call_args.kwargs["env"]["RCLONE_DRIVE_CLIENT_ID"]
+                == "123456-abc.apps.googleusercontent.com"
+            )
+            assert (
+                auth_call_args.kwargs["env"]["RCLONE_DRIVE_CLIENT_SECRET"]
+                == "GOCSPX-secret_value_123"
+            )
+
+            # Verify persisted to rclone.conf with 0600 permissions
+            assert rclone_conf.exists()
+            assert (os.stat(rclone_conf).st_mode & 0o777) == 0o600
+            parser = configparser.RawConfigParser()
+            parser.read(rclone_conf, encoding="utf-8")
+            assert (
+                parser.get(AuthManager.REMOTE_NAME, "client_id")
+                == "123456-abc.apps.googleusercontent.com"
+            )
+            assert (
+                parser.get(AuthManager.REMOTE_NAME, "client_secret")
+                == "GOCSPX-secret_value_123"
+            )
+
+    def test_start_authentication_handles_called_process_error(self):
+        mgr = AuthManager()
+        with (
+            patch.object(mgr, "get_rclone_path", return_value="/usr/bin/rclone"),
+            patch.object(mgr, "get_custom_credentials", return_value=None),
+            patch(
+                "cyswllt.auth_manager.subprocess.run",
+                side_effect=subprocess.CalledProcessError(
+                    1, ["/usr/bin/rclone"], stderr="oauth failed"
+                ),
+            ),
+        ):
+            assert mgr.start_authentication() is False

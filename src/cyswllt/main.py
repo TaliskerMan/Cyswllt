@@ -5,6 +5,7 @@
 import sys
 import threading
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 import gi
 
@@ -522,6 +523,7 @@ class CyswlltApp(Adw.Application):
             application_icon="com.taliskerman.cyswllt",
             developer_name="Chuck Talk",
             version=__version__,
+            comments="Support: support@nordheim.online | Author: chuck@nordheim.online",
             copyright="© 2026 Chuck Talk, Nordheim Online, LLC",
             license_type=Gtk.License.GPL_3_0,
             website="https://nordheim.online",
@@ -598,16 +600,24 @@ class CyswlltApp(Adw.Application):
             start()
 
 
+class _SanitizingFormatter(logging.Formatter):
+    """Sanitize CR/LF control characters from log messages (Log Sanitization rule)."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        rendered = super().format(record)
+        return rendered.replace("\r", "\\r").replace("\n", "\\n")
+
+
 def setup_logging():
     """
     Sets up application file logging under ~/.cache/cyswllt/cyswllt.log,
-    enforcing tight 0o600 file permission attributes.
+    enforcing tight 0o600 file permission attributes and a 5 MiB rotation cap.
     """
     log_dir = os.path.expanduser("~/.cache/cyswllt")
     os.makedirs(log_dir, mode=0o700, exist_ok=True)
-    os.chmod(log_dir, 0o700) # Enforce tight permissions if already exists
+    os.chmod(log_dir, 0o700)  # Enforce tight permissions if already exists
     log_file = os.path.join(log_dir, "cyswllt.log")
-    
+
     # Touch file securely if it doesn't exist to ensure permissions
     if not os.path.exists(log_file):
         try:
@@ -620,12 +630,20 @@ def setup_logging():
             os.chmod(log_file, 0o600)
         except Exception:
             pass
-            
-    logging.basicConfig(
-        filename=log_file,
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+
+    handler = RotatingFileHandler(
+        log_file,
+        maxBytes=5 * 1024 * 1024,
+        backupCount=2,
+        encoding="utf-8",
     )
+    handler.setFormatter(
+        _SanitizingFormatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    )
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.handlers.clear()
+    root_logger.addHandler(handler)
     logging.info("Cyswllt Application Started")
 
 

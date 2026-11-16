@@ -10,6 +10,8 @@ __pycache__/
 build/
 dist/
 .pytest_cache/
+.coverage
+coverage.xml
 .venv/
 venv/
 
@@ -20,6 +22,8 @@ artifacts/
 debian/cyswllt/
 debian/.debhelper/
 debian/files
+debian/debhelper-build-stamp
+debian/*.debhelper
 debian/*.substvars
 debian/*.debhelper.log
 *.deb
@@ -27,4 +31,4 @@ debian/*.debhelper.log
 *.changes
 *.dsc
 *.orig.tar.gz
-sonar-project.properties
+.scannerwork/

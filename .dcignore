@@ -1,0 +1,9 @@
+Audit/
+artifacts/
+debian/
+build/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pdf

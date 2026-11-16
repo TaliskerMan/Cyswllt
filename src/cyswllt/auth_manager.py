@@ -1,235 +1,269 @@
-# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC <chuck@nordheim.online>
-# This file is part of Cyswllt.
+# Copyright (C) 2026 Chuck Talk, Nordheim Online, LLC.
 # Released under the GNU GPL v3 license.
 
-import subprocess
+import configparser
 import json
 import logging
-import shutil
 import os
 import re
+import shutil
+import stat
+import subprocess
 
-# Path where the user's custom Google API credentials are stored.
-_CREDENTIALS_FILE = os.path.expanduser("~/.config/cyswllt/google_credentials.json")
+
+_CREDENTIAL_TOKEN_RE = re.compile(r"^[A-Za-z0-9._~+/=-]{4,256}$")
+
+
+def is_valid_oauth_credential(value: object) -> bool:
+    """Validate that an OAuth client_id or client_secret is a safe token string.
+
+    Rejects empty values, non-strings, leading hyphens (CWE-88 option injection),
+    whitespace, and control characters.
+    """
+    if not isinstance(value, str):
+        return False
+    stripped = value.strip()
+    if not stripped or stripped.startswith("-"):
+        return False
+    return bool(_CREDENTIAL_TOKEN_RE.fullmatch(stripped))
 
 
 class AuthManager:
-    """
-    Manages authentication with Google Drive via rclone.
+    """Manages rclone authentication and Google Drive remote configuration.
 
-    Optionally uses a user-supplied Google OAuth Client ID and Secret to
-    bypass rclone's shared, heavily rate-limited credentials.  When custom
-    credentials are present they are passed to both ``rclone authorize`` and
-    ``rclone config create`` so the resulting remote is fully associated with
-    the private Client ID.
+    Handles locating the rclone binary, storing custom OAuth credentials,
+    running the interactive browser-based OAuth flow, and creating the
+    named rclone remote used by MountManager.
     """
+
     REMOTE_NAME = "cyswllt_gdrive"
 
     def __init__(self):
-        """
-        Initializes the AuthManager instance.
-        """
-        pass
+        """Initialize the AuthManager with no cached rclone path."""
+        self._rclone_path = None
 
-    # ------------------------------------------------------------------
-    # Custom credential helpers
-    # ------------------------------------------------------------------
+    def get_rclone_path(self) -> str | None:
+        """Locate the rclone binary, caching the result after the first lookup.
 
-    def get_custom_credentials(self):
-        """
-        Returns the stored custom Client ID and Secret as a dict.
+        Checks the system PATH first via shutil.which, then falls back to common
+        installation locations (/usr/bin, /usr/local/bin, /snap/bin).
 
         Returns:
-            dict: Custom credentials dictionary `{"client_id": "...", "client_secret": "..."}`,
-                  or `None` if credentials file doesn't exist or is invalid.
+            The absolute path to the rclone executable, or None if not found.
         """
-        if not os.path.exists(_CREDENTIALS_FILE):
-            return None
-        try:
-            with open(_CREDENTIALS_FILE, "r") as file:
-                data = json.load(file)
-            if data.get("client_id") and data.get("client_secret"):
-                return data
-        except Exception:
-            logging.exception("Failed to read credentials file")
+        if self._rclone_path:
+            return self._rclone_path
+
+        # Check standard locations and PATH
+        path = shutil.which("rclone")
+        if path:
+            self._rclone_path = path
+            return path
+
+        common_paths = ["/usr/bin/rclone", "/usr/local/bin/rclone", "/snap/bin/rclone"]
+        for candidate in common_paths:
+            if os.path.exists(candidate) and os.access(candidate, os.X_OK):
+                self._rclone_path = candidate
+                return candidate
+
         return None
 
-    def save_custom_credentials(self, client_id: str, client_secret: str) -> bool:
+    def get_config_dir(self) -> str:
+        """Return the path to the Cyswllt configuration directory, creating it if needed.
+
+        The directory is created at ~/.config/cyswllt with 0700 permissions so that
+        stored OAuth credentials are only readable by the owning user.
+
+        Returns:
+            The absolute path to ~/.config/cyswllt.
         """
-        Persists the user's custom Google OAuth credentials to disk.
+        config_dir = os.path.expanduser("~/.config/cyswllt")
+        if not os.path.exists(config_dir):
+            os.makedirs(config_dir, mode=0o700, exist_ok=True)
+        return config_dir
+
+    def get_credentials_file(self) -> str:
+        """Return the path to the custom OAuth credentials JSON file.
+
+        Returns:
+            The absolute path to ~/.config/cyswllt/credentials.json.
+        """
+        return os.path.join(self.get_config_dir(), "credentials.json")
+
+    def get_rclone_config_file(self) -> str:
+        """Return the user's rclone.conf path under ~/.config/rclone."""
+        rclone_dir = os.path.expanduser("~/.config/rclone")
+        if not os.path.exists(rclone_dir):
+            os.makedirs(rclone_dir, mode=0o700, exist_ok=True)
+        return os.path.join(rclone_dir, "rclone.conf")
+
+    def save_custom_credentials(self, client_id: str, client_secret: str) -> bool:
+        """Persist custom Google OAuth client credentials to disk.
+
+        Writes the credentials as JSON to ~/.config/cyswllt/credentials.json with
+        0600 permissions (user read/write only) to protect the client secret.
 
         Args:
-            client_id (str): The Google Cloud Client ID string.
-            client_secret (str): The Google Cloud Client Secret string.
+            client_id: The Google OAuth 2.0 Client ID.
+            client_secret: The Google OAuth 2.0 Client Secret.
 
         Returns:
-            bool: True on success, False on failure. Saves configuration to
-                  ~/.config/cyswllt/google_credentials.json with strict 0o600 permissions.
+            True if the credentials were saved successfully, False on invalid input or I/O error.
         """
-        client_id = client_id.strip()
-        client_secret = client_secret.strip()
-        if not client_id or not client_secret:
-            logging.error("save_custom_credentials: client_id and client_secret must not be empty")
+        clean_id = client_id.strip() if isinstance(client_id, str) else ""
+        clean_secret = client_secret.strip() if isinstance(client_secret, str) else ""
+        if not is_valid_oauth_credential(clean_id) or not is_valid_oauth_credential(clean_secret):
+            logging.error("Rejected invalid OAuth credential format.")
             return False
+
         try:
-            os.makedirs(os.path.dirname(_CREDENTIALS_FILE), mode=0o700,
-                        exist_ok=True)
-            # Create the file owner-only from the start (0o600). Writing it
-            # with default permissions and chmod-ing afterwards left the secret
-            # briefly readable by other local users.
-            with open(_CREDENTIALS_FILE, "w",
-                      opener=lambda path, flags: os.open(path, flags, 0o600)) as file:
-                json.dump({"client_id": client_id, "client_secret": client_secret}, file)
-            os.chmod(_CREDENTIALS_FILE, 0o600)  # also tightens an existing file
-            logging.info("Custom Google credentials saved.")
+            creds = {
+                "client_id": clean_id,
+                "client_secret": clean_secret,
+            }
+            path = self.get_credentials_file()
+
+            # Write with restrictive permissions (600)
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            mode = stat.S_IRUSR | stat.S_IWUSR
+            with open(path, "w", opener=lambda p, f: os.open(p, flags, mode)) as file:
+                json.dump(creds, file)
             return True
-        except Exception:
-            logging.exception("Failed to save credentials")
+        except Exception as error:
+            logging.error(f"Error saving credentials: {error}")
             return False
 
-    def clear_custom_credentials(self) -> bool:
-        """
-        Removes any stored custom Google OAuth credentials from disk.
+    def get_custom_credentials(self) -> dict[str, str] | None:
+        """Load custom Google OAuth client credentials from disk if present.
 
         Returns:
-            bool: True on success or if the file was already absent, False on error.
+            A dict containing 'client_id' and 'client_secret' if both are set and
+            valid in the credentials file, or None if the file does not exist,
+            is incomplete, or cannot be read.
         """
-        if not os.path.exists(_CREDENTIALS_FILE):
-            return True
+        path = self.get_credentials_file()
+        if not os.path.exists(path):
+            return None
         try:
-            os.remove(_CREDENTIALS_FILE)
-            logging.info("Custom Google credentials cleared.")
-            return True
-        except Exception:
-            logging.exception("Failed to clear credentials")
-            return False
+            with open(path, "r", encoding="utf-8") as file:
+                data = json.load(file)
+                if not isinstance(data, dict):
+                    return None
+                client_id = data.get("client_id")
+                client_secret = data.get("client_secret")
+                if is_valid_oauth_credential(client_id) and is_valid_oauth_credential(
+                    client_secret
+                ):
+                    return {
+                        "client_id": client_id.strip(),
+                        "client_secret": client_secret.strip(),
+                    }
+        except Exception as error:
+            logging.error(f"Error loading credentials: {error}")
+        return None
 
-    def has_custom_credentials(self) -> bool:
-        """
-        Checks if valid custom credentials exist on disk.
+    def _persist_remote_credentials(self, creds: dict[str, str]) -> None:
+        """Persist validated client_id and client_secret into rclone.conf."""
+        client_id = creds.get("client_id", "")
+        client_secret = creds.get("client_secret", "")
+        if not is_valid_oauth_credential(client_id) or not is_valid_oauth_credential(client_secret):
+            return
+
+        conf_path = self.get_rclone_config_file()
+        parser = configparser.RawConfigParser()
+        if os.path.exists(conf_path):
+            parser.read(conf_path, encoding="utf-8")
+        if not parser.has_section(self.REMOTE_NAME):
+            parser.add_section(self.REMOTE_NAME)
+        parser.set(self.REMOTE_NAME, "client_id", client_id)
+        parser.set(self.REMOTE_NAME, "client_secret", client_secret)
+
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        mode = stat.S_IRUSR | stat.S_IWUSR
+        with open(
+            conf_path,
+            "w",
+            encoding="utf-8",
+            opener=lambda p, f: os.open(p, flags, mode),
+        ) as conf_file:
+            parser.write(conf_file)
+
+    def is_authenticated(self) -> bool:
+        """Check whether the Google Drive rclone remote is already configured.
+
+        Runs ``rclone listremotes`` and checks for ``cyswllt_gdrive:`` in the output.
 
         Returns:
-            bool: True if Client ID and Secret exist, False otherwise.
+            True if the remote exists in rclone's configuration, False otherwise.
         """
-        return self.get_custom_credentials() is not None
-
-    # ------------------------------------------------------------------
-    # rclone helpers
-    # ------------------------------------------------------------------
-
-    def is_rclone_installed(self):
-        """
-        Checks if rclone is installed and available in the system PATH.
-
-        Returns:
-            bool: True if installed and responds to version query, False otherwise.
-        """
-        rclone_path = shutil.which("rclone")
+        rclone_path = self.get_rclone_path()
         if not rclone_path:
             return False
-        try:
-            subprocess.run(
-                [rclone_path, "--version"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                check=True,
-            )
-            return True
-        except (FileNotFoundError, subprocess.CalledProcessError):
-            return False
 
-    def is_authenticated(self):
-        """
-        Checks if the custom Cyswllt remote is already configured in rclone.
-
-        Returns:
-            bool: True if the remote cyswllt_gdrive is configured, False otherwise.
-        """
-        rclone_path = shutil.which("rclone")
-        if not rclone_path:
-            return False
         try:
             result = subprocess.run(
-                [rclone_path, "listremotes"],
-                capture_output=True,
-                text=True,
-                check=True,
+                [rclone_path, "listremotes"], capture_output=True, text=True, check=True
             )
             return f"{self.REMOTE_NAME}:" in result.stdout
-        except subprocess.CalledProcessError:
+        except Exception as error:
+            logging.error(f"Error checking authentication: {error}")
             return False
 
     @staticmethod
-    def extract_token_json(output: str) -> str:
-        """
-        Extracts the OAuth token JSON object from rclone authorize stdout.
+    def extract_token_json(output: str) -> str | None:
+        """Extract the OAuth token JSON object from ``rclone authorize`` stdout.
 
-        rclone surrounds the token with human-readable text, so we pull the first
-        ``{...}`` block; if none is found we treat the whole output as the
-        candidate. The candidate is validated as JSON before being returned.
+        rclone surrounds the JSON token with human-readable instructions; this
+        method locates the ``{...}`` block (or accepts output that is already
+        pure JSON) and validates that it parses as JSON.
 
         Args:
-            output (str): Raw stdout from ``rclone authorize``.
+            output: Raw stdout captured from ``rclone authorize``.
 
         Returns:
-            str: The token JSON string.
-
-        Raises:
-            ValueError: If no valid JSON token can be extracted.
+            The validated JSON string, or None if no valid JSON object was found.
         """
-        text = (output or "").strip()
-        match = re.search(r'(\{.*\})', text, re.DOTALL)
-        candidate = match.group(0) if match else text
-        # Raises json.JSONDecodeError (a ValueError subclass) on malformed input.
-        json.loads(candidate)
-        return candidate
+        trimmed = output.strip()
+        match = re.search(r"(\{.*\})", trimmed, re.DOTALL)
+        candidate = match.group(1) if match else trimmed
+        try:
+            json.loads(candidate)
+            return candidate
+        except ValueError:
+            return None
 
-    def start_authentication(self):
-        """
-        Starts the Google Drive OAuth flow using rclone authorize.
+    def start_authentication(self) -> bool:
+        """Run the interactive rclone OAuth flow and create the Google Drive remote.
 
-        Launches the authentication web page. If custom credentials exist, they
-        are injected. Once the token is returned, configures the cyswllt_gdrive remote.
-        This is a blocking call and must be executed in a worker thread.
+        Launches ``rclone authorize drive`` (which opens the user's browser for
+        Google sign-in), extracts the resulting OAuth token from stdout, and
+        registers the ``cyswllt_gdrive`` remote via ``rclone config create``.
+        If custom OAuth credentials have been saved, they are supplied via
+        environment variables during authorization and persisted to rclone.conf.
 
         Returns:
-            bool: True if authentication succeeded and remote was created, False otherwise.
+            True if authorization and remote creation succeeded, False otherwise.
         """
-        rclone_path = shutil.which("rclone")
+        rclone_path = self.get_rclone_path()
         if not rclone_path:
-            logging.error("Rclone not found in PATH")
+            logging.error("Rclone binary not found.")
             return False
 
-        creds = self.get_custom_credentials()
-        if creds:
-            logging.info(
-                "Using custom Google Client ID for authentication "
-                "(bypasses rclone shared rate limits)."
-            )
-        else:
-            logging.info(
-                "No custom Google Client ID found — using rclone's default "
-                "shared credentials.  Consider adding your own Client ID in "
-                "Settings → Performance for faster connections."
-            )
-
         try:
-            logging.info("Starting authorization...")
-
-            # Build the authorize command.  rclone's `authorize` subcommand takes
-            # the client id/secret as POSITIONAL arguments
-            # (`rclone authorize drive <client_id> <client_secret>`); it does not
-            # read the RCLONE_DRIVE_* backend env vars at this step.  Passing them
-            # positionally is what actually binds the user's private Client ID at
-            # sign-in, so they avoid the shared rate limits during the OAuth
-            # handshake.  We also keep the env vars set for any downstream calls.
-            authorize_cmd = [rclone_path, "authorize", "drive"]
+            logging.info("Starting rclone authorize flow...")
             env = os.environ.copy()
+            if "PATH" in env:
+                env["PATH"] = f"/usr/bin:/bin:{env['PATH']}"
+            else:
+                env["PATH"] = "/usr/bin:/bin"
+
+            creds = self.get_custom_credentials()
             if creds:
-                authorize_cmd += [creds["client_id"], creds["client_secret"]]
+                logging.info("Using custom Client ID for authorization.")
                 env["RCLONE_DRIVE_CLIENT_ID"] = creds["client_id"]
                 env["RCLONE_DRIVE_CLIENT_SECRET"] = creds["client_secret"]
 
+            authorize_cmd = [rclone_path, "authorize", "drive"]
             result = subprocess.run(
                 authorize_cmd,
                 capture_output=True,
@@ -238,53 +272,35 @@ class AuthManager:
                 env=env,
             )
 
-            # rclone prints the JSON token somewhere in stdout — extract + validate it.
-            token_json = self.extract_token_json(result.stdout)
+            output = result.stdout
+            token_json = self.extract_token_json(output)
+            if token_json is None:
+                logging.error("Could not find valid token JSON in rclone output.")
+                logging.debug(f"Output was: {output}")
+                return False
 
-            logging.info(f"Token received.  Configuring remote '{self.REMOTE_NAME}'...")
-
-            # Build the config create command.  Write the Client ID/Secret
-            # directly into the remote config (not just via env) so every future
-            # rclone call against this remote uses the private credentials.
+            logging.info(f"Configuring remote {self.REMOTE_NAME}...")
             config_cmd = [
-                rclone_path, "config", "create",
-                self.REMOTE_NAME, "drive",
+                rclone_path,
+                "config",
+                "create",
+                self.REMOTE_NAME,
+                "drive",
                 f"token={token_json}",
                 "config_is_local=false",
             ]
-            if creds:
-                config_cmd += [
-                    f"client_id={creds['client_id']}",
-                    f"client_secret={creds['client_secret']}",
-                ]
+            subprocess.run(config_cmd, capture_output=True, text=True, check=True, env=env)
 
-            subprocess.run(config_cmd, check=True, capture_output=True, env=env)
+            if creds:
+                self._persist_remote_credentials(creds)
+
+            logging.info("Authentication successful.")
             return True
 
         except subprocess.CalledProcessError as error:
-            logging.error(f"Rclone error: {error}")
-            if error.stderr:
-                logging.error(f"Stderr: {error.stderr}")
+            stderr_msg = (error.stderr or "").strip()
+            logging.exception("Rclone error during authentication (stderr=%s)", stderr_msg)
             return False
         except Exception:
-            logging.exception("Auth error")
-            return False
-
-    def delete_remote(self):
-        """
-        Deletes the configured cyswllt_gdrive remote from the rclone configuration.
-
-        Returns:
-            bool: True if deletion succeeded, False otherwise.
-        """
-        rclone_path = shutil.which("rclone")
-        if not rclone_path:
-            return False
-        try:
-            subprocess.run(
-                [rclone_path, "config", "delete", self.REMOTE_NAME],
-                check=True,
-            )
-            return True
-        except subprocess.CalledProcessError:
+            logging.exception("Unexpected error during authentication")
             return False

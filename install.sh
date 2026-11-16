@@ -1,47 +1,53 @@
 #!/bin/bash
+set -euo pipefail
 
-# Configuration
-APP_NAME="Cyswllt"
-APP_PKG="com.taliskerman.cyswllt"
-INSTALL_DIR="$HOME/.local/lib/cyswllt"
-BIN_DIR="$HOME/.local/bin"
-ICON_DIR="$HOME/.local/share/icons/hicolor/256x256/apps"
-DESKTOP_DIR="$HOME/.local/share/applications"
+echo "Installing Cyswllt dependencies..."
 
-echo "Installing $APP_NAME..."
-
-# Create directories
-mkdir -p "$INSTALL_DIR"
-mkdir -p "$BIN_DIR"
-mkdir -p "$ICON_DIR"
-mkdir -p "$DESKTOP_DIR"
-
-# Copy source
-echo "Copying source code..."
-rsync -av --exclude 'artifacts' --exclude '.git' --exclude '__pycache__' ./ "$INSTALL_DIR/"
-
-# Install Icon
-echo "Installing icon..."
-cp "$INSTALL_DIR/data/icons/cyswllt.png" "$ICON_DIR/$APP_PKG.png"
-
-# Update Desktop File
-echo "Configuring desktop entry..."
-DESKTOP_FILE="$INSTALL_DIR/data/$APP_PKG.desktop"
-
-# Fix paths in desktop file
-sed -i "s|Exec=.*|Exec=python3 $INSTALL_DIR/src/cyswllt/main.py|" "$DESKTOP_FILE"
-sed -i "s|Icon=.*|Icon=$APP_PKG|" "$DESKTOP_FILE"
-
-# Install Desktop File
-cp "$DESKTOP_FILE" "$DESKTOP_DIR/"
-
-# Make source executable just in case
-chmod +x "$INSTALL_DIR/src/cyswllt/main.py"
-
-# Update icon cache (if possible)
-if command -v gtk-update-icon-cache &> /dev/null; then
-    gtk-update-icon-cache -f -t "$HOME/.local/share/icons/hicolor" || true
+# Check for root/sudo if needed for apt, though we prefer user to run with sudo or we invoke sudo
+if [[ "$EUID" -ne 0 ]]; then
+    SUDO="sudo"
+else
+    SUDO=""
 fi
 
-echo "$APP_NAME installed successfully!"
-echo "You can now launch it from your application menu."
+echo "Updating apt repositories and installing system packages (rclone, fuse3, GTK4, Libadwaita)..."
+$SUDO apt-get update
+$SUDO apt-get install -y \
+    python3-pip \
+    python3-gi \
+    python3-gi-cairo \
+    gir1.2-gtk-4.0 \
+    gir1.2-adw-1 \
+    rclone \
+    fuse3 \
+    libfuse2
+
+# Ensure user_allow_other is enabled in /etc/fuse.conf if needed (optional, good practice)
+if [[ -f /etc/fuse.conf ]]; then
+    if ! grep -q "^user_allow_other" /etc/fuse.conf; then
+        echo "Enabling user_allow_other in /etc/fuse.conf..."
+        echo "user_allow_other" | $SUDO tee -a /etc/fuse.conf >/dev/null
+    fi
+fi
+
+echo "Installing Cyswllt Python package..."
+# Install in user space to avoid messing with system python, or system-wide if preferred.
+# Using --break-system-packages on newer Debian/Ubuntu if installing globally/user without venv,
+# but pip install --user . is standard for simple desktop apps if not packaging as .deb yet.
+pip3 install --user . --break-system-packages || pip3 install --user .
+
+echo "Installing Desktop Entry and Icons..."
+mkdir -p ~/.local/share/applications
+cp data/com.taliskerman.cyswllt.desktop ~/.local/share/applications/
+
+mkdir -p ~/.local/share/icons/hicolor/scalable/apps
+cp data/icons/hicolor/scalable/apps/com.taliskerman.cyswllt.svg ~/.local/share/icons/hicolor/scalable/apps/
+
+# Update desktop database
+update-desktop-database ~/.local/share/applications || true
+gtk-update-icon-cache ~/.local/share/icons/hicolor -f -t || true
+
+echo ""
+echo "Installation complete!"
+echo "Make sure ~/.local/bin is in your PATH."
+echo "You can now launch 'Cyswllt' from your application menu or by running 'cyswllt' in the terminal."

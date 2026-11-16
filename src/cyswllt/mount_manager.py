@@ -129,7 +129,6 @@ Categories=FileManager;
 """
         try:
             # Secure file creation with tight permissions to prevent hijacking
-            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
             mode = 0o700
             with open(desktop_file, "w", opener=lambda path, flags: os.open(path, flags, mode)) as f:
                 f.write(content)

@@ -1,95 +1,95 @@
 #!/bin/bash
 set -euo pipefail
 
-# Auto-increment version/build number
-python3 "/Users/charlestalk/AntiGravity/workflow-tools/increment_build.py" "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Ensure execution from repository root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
-
-# Fetch ShadowAgent Ground Rules dynamically based on framework configuration
-echo "Verifying ShadowAgent configuration..."
-SHADOW_AGENT_PORT="8080"
-if [ -f ~/.config/shadowagent/api.port ]; then
-    SHADOW_AGENT_PORT=$(cat ~/.config/shadowagent/api.port)
-fi
-if [ -f ~/.config/shadowagent/api.key ]; then
-    API_KEY=$(cat ~/.config/shadowagent/api.key)
-    curl -s -S -H "Authorization: Bearer $API_KEY" "http://localhost:${SHADOW_AGENT_PORT}/rules" > /dev/null || true
+# Increment Build Version (Rule_017)
+INCREMENT_SCRIPT="${SCRIPT_DIR}/../workflow-tools/increment_build.py"
+if [[ -f "$INCREMENT_SCRIPT" ]]; then
+    echo "=== Incrementing Build Version (Rule_017) ==="
+    python3 "$INCREMENT_SCRIPT" .
 fi
 
-# Configuration
-VERSION_FILE="src/cyswllt/version.py"
-PLAN_FILE="CyswlltPlan.md"
-ARTIFACTS_DIR="artifacts"
-GPG_KEY="chuck@nordheim.online"
-
-# 1. Get current version
-CURRENT_VERSION=$(awk -F '"' '/__version__/ {print $2}' "$VERSION_FILE")
-echo "Current version: $CURRENT_VERSION"
-
-# 2. Increment version (Patch level)
-IFS='.' read -r -a VERSION_PARTS <<< "$CURRENT_VERSION"
-MAJOR="${VERSION_PARTS[0]}"
-MINOR="${VERSION_PARTS[1]}"
-PATCH="${VERSION_PARTS[2]}"
-NEW_PATCH=$((PATCH + 1))
-NEW_VERSION="$MAJOR.$MINOR.$NEW_PATCH"
-echo "New version: $NEW_VERSION"
-
-# 3. Update version.py
-sed -i.bak "s/__version__ = \"$CURRENT_VERSION\"/__version__ = \"$NEW_VERSION\"/" "$VERSION_FILE"
-rm -f "${VERSION_FILE}.bak"
-
-# 4. Update Debian Changelog
-# Check if dch is available
-if command -v dch &> /dev/null; then
-    # -v version, -D distribution, --force-distribution to force it
-    # Use standard "Release <version>" message
-    DEBEMAIL="$GPG_KEY" DEBFULLNAME="Chuck Talk" dch -v "$NEW_VERSION-1" -D "unstable" --force-distribution "Release v$NEW_VERSION"
-else
-    echo "Error: dch (devscripts) not found. Please install devscripts."
+# --- Pre-Flight Security & Quality Gate (Rules 003, 004, 005, 006) ---
+echo "=== Running Pre-Flight Security & Quality Scans ==="
+mkdir -p Audit
+if ! command -v trivy >/dev/null 2>&1; then
+    echo "Error: trivy is required (Rule 004). Install trivy." >&2
+    exit 1
+fi
+if ! command -v syft >/dev/null 2>&1 || ! command -v grype >/dev/null 2>&1; then
+    echo "Error: syft and grype are required (Rule 003). Install syft and grype." >&2
     exit 1
 fi
 
-# 5. Update CyswlltPlan.md
-echo "" >> "$PLAN_FILE"
-echo "## Release $NEW_VERSION ($(date +%Y-%m-%d))" >> "$PLAN_FILE"
-echo "- Bumped version to $NEW_VERSION" >> "$PLAN_FILE"
-echo "- Built and signed DEB package" >> "$PLAN_FILE"
+echo "[1/3] Scanning for exposed secrets..."
+trivy fs --scanners secret --exit-code 1 .
+echo "[2/3] Generating SBOM and scanning dependencies..."
+OS_NAME="$(uname -s)"
+if [[ "$OS_NAME" == "Darwin" ]]; then
+    SBOM_SUFFIX="macOS"
+else
+    SBOM_SUFFIX="$OS_NAME"
+fi
+syft . \
+    --source-name "Cyswllt" \
+    --exclude "./Audit/**" \
+    --exclude "./.git/**" \
+    --exclude "./artifacts/**" \
+    -o spdx-json="Audit/SBOM-${SBOM_SUFFIX}.json" \
+    -o syft-table="Audit/SBOM-${SBOM_SUFFIX}"
+grype "sbom:Audit/SBOM-${SBOM_SUFFIX}.json" --fail-on high
+echo "[3/3] Running automated test suite..."
+PYTHONPATH=src pytest
+echo "=== Pre-Flight Gate Passed ==="
 
-# 6. Build Package
-echo "Building package..."
-# We need to create the orig tarball again for the new version
-# The directory name needs to be cyswllt-0.1.1 for dpkg-source if strictly following, 
-# but usually it handles it if we provide the orig setup correctly.
-# Let's clean up old builds first
-rm -f ../cyswllt_*.orig.tar.gz
+# Extract current version from src/cyswllt/version.py
+VERSION=$(grep "__version__" src/cyswllt/version.py | cut -d '"' -f 2)
+# Use a timestamp to ensure unique test build versions
+TIMESTAMP=$(date +%Y%m%d%H%M)
+TEST_VERSION="${VERSION}~test${TIMESTAMP}"
 
-tar --exclude=debian --exclude=.git --exclude=artifacts --exclude=__pycache__ -czf "../cyswllt_$NEW_VERSION.orig.tar.gz" .
+echo "Building Test Package for Cyswllt v${TEST_VERSION}..."
 
-# Build
-# -i: Ignore files matching regex (for diff)
-# -I: Ignore files (for tar)
-# We ignore .git, artifacts, and __pycache__ to prevent them from being part of the diff/tar
-debuild -us -uc -i"(\.git|artifacts|__pycache__)" -I".git" -I"artifacts" -I"__pycache__"
+# 1. Update Debian Changelog (Temporary for test build)
+export DEBFULLNAME="Chuck Talk"
+export DEBEMAIL="chuck@nordheim.online"
 
-# 7. Move Artifacts
-echo "Moving artifacts..."
-mkdir -p "$ARTIFACTS_DIR"
-mv ../cyswllt_${NEW_VERSION}-1* "$ARTIFACTS_DIR/" || true
-mv "../cyswllt_$NEW_VERSION.orig.tar.gz" "$ARTIFACTS_DIR/" || true
+if ! command -v dch &> /dev/null; then
+    echo "Error: dch (devscripts) not found. Please install devscripts." >&2
+    exit 1
+fi
 
-# 8. Sign and Hash
-echo "Signing and hashing..."
-# debsign might be interactive if gpg requires passphrase. 
-# We assume the user has gpg agent set up or will enter it.
-debsign -k "$GPG_KEY" "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_amd64.changes"
-sha512sum "$ARTIFACTS_DIR/cyswllt_${NEW_VERSION}-1_all.deb" > "$ARTIFACTS_DIR/checksums.sha512"
+# Backup original changelog
+cp debian/changelog debian/changelog.bak
 
-# 9. Git Operations (SKIPPED FOR TEST BUILD)
-# echo "Committing and tagging..."
-# git add .
-# git commit -m "Release v$NEW_VERSION"
-# git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
-# git push origin HEAD --tags
+# Cleanup function to restore changelog on exit
+cleanup() {
+    if [[ -f debian/changelog.bak ]]; then
+        echo "Restoring original debian/changelog..."
+        mv debian/changelog.bak debian/changelog
+    fi
+}
+trap cleanup EXIT
 
-echo "Test Build $NEW_VERSION completed successfully!"
+dch -v "${TEST_VERSION}-1" -D unstable "Automated test build"
+
+# 2. Build Unsigned Binary Package
+echo "Running dpkg-buildpackage (unsigned binary only)..."
+dpkg-buildpackage -b -us -uc
+
+# 3. Move Artifacts
+mkdir -p artifacts/test
+mv "../cyswllt_${TEST_VERSION}-1_"*.deb artifacts/test/
+mv "../cyswllt_${TEST_VERSION}-1_"*.changes artifacts/test/ 2>/dev/null || true
+mv "../cyswllt_${TEST_VERSION}-1_"*.buildinfo artifacts/test/ 2>/dev/null || true
+
+echo ""
+echo "=== Test Build Complete ==="
+echo "Test package available in ./artifacts/test/:"
+ls -lh artifacts/test/*.deb
+echo ""
+echo "To install:"
+echo "sudo apt install ./artifacts/test/cyswllt_${TEST_VERSION}-1_all.deb"
