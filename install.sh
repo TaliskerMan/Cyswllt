@@ -23,18 +23,16 @@ $SUDO apt-get install -y \
     libfuse2
 
 # Ensure user_allow_other is enabled in /etc/fuse.conf if needed (optional, good practice)
-if [[ -f /etc/fuse.conf ]]; then
-    if ! grep -q "^user_allow_other" /etc/fuse.conf; then
-        echo "Enabling user_allow_other in /etc/fuse.conf..."
-        echo "user_allow_other" | $SUDO tee -a /etc/fuse.conf >/dev/null
-    fi
+if [[ -f /etc/fuse.conf ]] && ! grep -q "^user_allow_other" /etc/fuse.conf; then
+    echo "Enabling user_allow_other in /etc/fuse.conf..."
+    echo "user_allow_other" | $SUDO tee -a /etc/fuse.conf >/dev/null
 fi
 
 echo "Installing Cyswllt Python package..."
 # Install in user space to avoid messing with system python, or system-wide if preferred.
 # Using --break-system-packages on newer Debian/Ubuntu if installing globally/user without venv,
 # but pip install --user . is standard for simple desktop apps if not packaging as .deb yet.
-pip3 install --user . --break-system-packages || pip3 install --user .
+pip3 install --only-binary :all: --user . --break-system-packages || pip3 install --only-binary :all: --user .
 
 echo "Installing Desktop Entry and Icons..."
 mkdir -p ~/.local/share/applications

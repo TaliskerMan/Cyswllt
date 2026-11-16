@@ -129,8 +129,8 @@ class AuthManager:
             with open(path, "w", opener=lambda p, f: os.open(p, flags, mode)) as file:
                 json.dump(creds, file)
             return True
-        except Exception as error:
-            logging.error(f"Error saving credentials: {error}")
+        except Exception:
+            logging.exception("Error saving credentials")
             return False
 
     def get_custom_credentials(self) -> dict[str, str] | None:
@@ -158,8 +158,8 @@ class AuthManager:
                         "client_id": client_id.strip(),
                         "client_secret": client_secret.strip(),
                     }
-        except Exception as error:
-            logging.error(f"Error loading credentials: {error}")
+        except Exception:
+            logging.exception("Error loading credentials")
         return None
 
     def _persist_remote_credentials(self, creds: dict[str, str]) -> None:
@@ -205,8 +205,8 @@ class AuthManager:
                 [rclone_path, "listremotes"], capture_output=True, text=True, check=True
             )
             return f"{self.REMOTE_NAME}:" in result.stdout
-        except Exception as error:
-            logging.error(f"Error checking authentication: {error}")
+        except Exception:
+            logging.exception("Error checking authentication")
             return False
 
     @staticmethod

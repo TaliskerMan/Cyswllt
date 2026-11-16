@@ -16,7 +16,7 @@ fi
 # 1. Dependency Updates
 echo "[1/7] Updating local dependencies..."
 if [[ -f "pyproject.toml" ]]; then
-    pip install --upgrade pip
+    pip install --only-binary :all: --upgrade pip
 fi
 
 # 2. Secret Scanning
@@ -144,14 +144,14 @@ DEB_FILE="${DEB_FILES[0]}"
 
 if [[ -f "$CHANGES_FILE" ]]; then
     echo "Signing .dsc and .changes with debsign..."
-    debsign -k"chuck@nordheim.online" "$CHANGES_FILE"
+    debsign -k"$DEBEMAIL" "$CHANGES_FILE"
 else
     echo "Warning: .changes file not found! Cannot run debsign." >&2
 fi
 
 if [[ -f "$DEB_FILE" ]]; then
     echo "Creating detached armored signature for ${DEB_FILE}..."
-    gpg --local-user "chuck@nordheim.online" --armor --detach-sig --output "${DEB_FILE}.asc" "${DEB_FILE}"
+    gpg --local-user "$DEBEMAIL" --armor --detach-sig --output "${DEB_FILE}.asc" "${DEB_FILE}"
 fi
 
 # 6. Generate Checksums
@@ -164,12 +164,12 @@ cp SHA256SUMS checksums.sha256
 cp SHA512SUMS checksums.sha512
 
 echo "Signing Checksums..."
-gpg --local-user "chuck@nordheim.online" --clearsign --output SHA256SUMS.asc SHA256SUMS
-gpg --local-user "chuck@nordheim.online" --clearsign --output SHA512SUMS.asc SHA512SUMS
+gpg --local-user "$DEBEMAIL" --clearsign --output SHA256SUMS.asc SHA256SUMS
+gpg --local-user "$DEBEMAIL" --clearsign --output SHA512SUMS.asc SHA512SUMS
 
 # 7. Export Public Key
 echo "Exporting public key..."
-gpg --armor --export "chuck@nordheim.online" > pubkey.asc
+gpg --armor --export "$DEBEMAIL" > pubkey.asc
 
 echo ""
 echo "=== Release Build Complete ==="
