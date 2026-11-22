@@ -1,3 +1,11 @@
+cyswllt (1.0.8-1) unstable; urgency=medium
+
+  * Refactored count_pending_uploads() in src/cyswllt/mount_manager.py into
+    focused helpers to resolve SonarQube Cloud python:S3776 Cognitive
+    Complexity (22 -> 4) while preserving canonical Snyk CWE-23 containment.
+
+ -- Chuck Talk <chuck@nordheim.online>  Sun, 22 Nov 2026 08:18:00 -0600
+
 cyswllt (1.0.7-1) unstable; urgency=medium
 
   * Remediated CS1-12 Snyk Code Path Traversal (2 x python/PT, CWE-23)

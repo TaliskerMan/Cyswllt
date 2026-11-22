@@ -215,7 +215,7 @@ const { html: bodyHtml, tocHtml } = injectHeadingIdsAndBuildToc(withCallouts);
 
 const cleanTitle = stripHtmlTags(meta.title || 'Cyswllt');
 const cleanSubtitle = stripHtmlTags(meta.subtitle || 'Installation and User Guide');
-const cleanVersion = stripHtmlTags(meta.version || '1.0.7');
+const cleanVersion = stripHtmlTags(meta.version || '1.0.8');
 const cleanPlatforms = stripHtmlTags(meta.platforms || 'Linux (GNOME and other GTK desktops)');
 
 const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><style>

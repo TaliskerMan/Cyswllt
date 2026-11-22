@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2026-11-22
+
+### Quality & Maintainability
+- **SonarQube Cloud Quality Gate Remediation (`python:S3776`):** Extracted `_resolve_vfs_meta_dir()`, `_is_dirty_vfs_meta_entry()`, and `_count_dirty_entries_in_dir()` helpers in `src/cyswllt/mount_manager.py`, reducing `count_pending_uploads()` Cognitive Complexity from `22` to `4` while preserving canonical `rclone_cache_root()` containment (`0` Snyk Code issues, `26/26` pytest passing).
+
 ## [1.0.7] - 2026-11-21
 
 ### Security & Hardening

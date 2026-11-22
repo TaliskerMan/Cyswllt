@@ -11,6 +11,7 @@ import shutil
 import subprocess
 import tempfile
 import time
+from typing import Optional
 
 # How long to wait for rclone to finish mounting. A first mount can take
 # well over 5 seconds while rclone contacts Google Drive.
@@ -64,6 +65,47 @@ def rclone_cache_root() -> str:
     return cache_real
 
 
+def _resolve_vfs_meta_dir(meta_dir: str, cache_root: str) -> Optional[str]:
+    """Validate and canonicalize ``meta_dir`` inside ``cache_root``, or return ``None``."""
+    if not meta_dir or "\x00" in meta_dir:
+        return None
+    meta_real = os.path.realpath(meta_dir)
+    if os.path.commonpath([cache_root, meta_real]) != cache_root:
+        return None
+    return meta_real if os.path.isdir(meta_real) else None
+
+
+def _is_dirty_vfs_meta_entry(candidate: str, meta_real: str, cache_root: str) -> bool:
+    """Return ``True`` when ``candidate`` is a regular JSON metadata file marked ``Dirty``."""
+    if os.path.islink(candidate):
+        return False
+    entry_real = os.path.realpath(candidate)
+    if (
+        not entry_real.startswith(meta_real + os.sep)
+        or os.path.commonpath([meta_real, entry_real]) != meta_real
+        or os.path.commonpath([cache_root, entry_real]) != cache_root
+    ):
+        return False
+    try:
+        with open(entry_real, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except (OSError, ValueError):
+        return False
+    return isinstance(payload, dict) and payload.get("Dirty") is True
+
+
+def _count_dirty_entries_in_dir(
+    root_real: str, files: list[str], meta_real: str, cache_root: str
+) -> int:
+    """Count dirty rclone metadata entries within a single validated directory."""
+    dirty_count = 0
+    for name in files:
+        candidate = os.path.join(root_real, name)
+        if _is_dirty_vfs_meta_entry(candidate, meta_real, cache_root):
+            dirty_count += 1
+    return dirty_count
+
+
 def count_pending_uploads(meta_dir: str) -> int:
     """
     Counts files in an rclone VFS metadata folder that are still waiting to be
@@ -71,21 +113,20 @@ def count_pending_uploads(meta_dir: str) -> int:
     file under ``vfsMeta/<remote>/`` and clears the flag once the upload has
     finished; this layout exists since rclone 1.53.
 
+    Change Comment (2026-11-22, python:S3776 / CS1-12 / CP-ChangeComments):
+    Extracted path validation and per-entry JSON inspection into focused helpers
+    so Cognitive Complexity drops from 22 to 4 while preserving canonical
+    rclone cache containment.
+
     Args:
         meta_dir (str): The ``vfsMeta/<remote>`` folder.
 
     Returns:
         int: Number of files not yet uploaded (0 if the folder doesn't exist).
     """
-    if not meta_dir or "\x00" in meta_dir:
-        return 0
-
-    meta_real = os.path.realpath(meta_dir)
     cache_root = os.path.realpath(rclone_cache_root())
-    if os.path.commonpath([cache_root, meta_real]) != cache_root:
-        return 0
-
-    if not os.path.isdir(meta_real):
+    meta_real = _resolve_vfs_meta_dir(meta_dir, cache_root)
+    if meta_real is None:
         return 0
 
     pending = 0
@@ -93,22 +134,7 @@ def count_pending_uploads(meta_dir: str) -> int:
         root_real = os.path.realpath(root)
         if os.path.commonpath([meta_real, root_real]) != meta_real:
             continue
-        for name in files:
-            candidate = os.path.join(root_real, name)
-            if os.path.islink(candidate):
-                continue
-            entry_real = os.path.realpath(candidate)
-            if (
-                not entry_real.startswith(meta_real + os.sep)
-                or os.path.commonpath([meta_real, entry_real]) != meta_real
-            ):
-                continue
-            try:
-                with open(entry_real, "r", encoding="utf-8") as handle:
-                    if json.load(handle).get("Dirty") is True:
-                        pending += 1
-            except (OSError, ValueError, AttributeError):
-                continue  # unreadable or not rclone metadata: ignore
+        pending += _count_dirty_entries_in_dir(root_real, files, meta_real, cache_root)
     return pending
 
 
