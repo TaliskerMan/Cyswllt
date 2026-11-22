@@ -1,10 +1,10 @@
 # Cyswllt Security Audit & Vulnerability Report
-**Date:** November 21, 2026  
+**Date:** November 22, 2026  
 **Application:** Cyswllt (Linux Cloud Storage Mounter & Manager)  
-**Version:** 1.0.7-1  
+**Version:** 1.0.8-1  
 
 ## 1. Executive Summary
-A comprehensive security audit, Snyk Code (`v1.1309.0`) & SonarQube Cloud (`TaliskerMan_Cyswllt`) quality gate verification, and shift-left static analysis evaluation has been conducted on Cyswllt v1.0.7-1 for Linux (`CS1-12`). Cyswllt integrates rclone and FUSE into a modern GTK4/libadwaita Linux desktop user interface with local-first credentials handling and canonical XDG path-traversal containment. Zero vulnerabilities, zero secrets/credential leaks, and zero code defects were identified across Snyk Code (`0` issues), SonarQube Cloud, unit test suites (`24/24` passing), Grype vulnerability scans, and Syft CycloneDX SBOM analysis.
+A comprehensive security audit, Snyk Code (`v1.1309.0`) & SonarQube Cloud (`TaliskerMan_Cyswllt`) quality gate verification, and shift-left static analysis evaluation has been conducted on Cyswllt v1.0.8-1 for Linux (`CS1-12`). Cyswllt integrates rclone and FUSE into a modern GTK4/libadwaita Linux desktop user interface with local-first credentials handling and canonical XDG path-traversal containment. Zero vulnerabilities, zero secrets/credential leaks, and zero code defects were identified across Snyk Code (`0` issues), SonarQube Cloud (`0` issues), unit test suites (`26/26` passing), Grype vulnerability scans, and Syft CycloneDX SBOM analysis.
 
 ## 2. Shift-Left Static Analysis & Test Gates
 - **Snyk Code SAST & Open Source (`snyk v1.1309.0`, `taliskerman`)**: **Passed (`0` issues)**. Remediated `CS1-12` (`2 × python/PT`, `CWE-23`) in `src/cyswllt/mount_manager.py` via canonical `os.path.commonpath` XDG containment, `remote_name` allowlist validation, and symlink-safe `vfsMeta` inspection.

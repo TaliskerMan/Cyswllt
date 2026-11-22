@@ -1,6 +1,10 @@
 # Plan for Cyswllt
 - [x] Untrack sonar-project.properties from GitHub and add to .gitignore
 
+## Release v1.0.8: SonarQube Cloud `python:S3776` Quality Gate Remediation (2026-11-22)
+- [x] Extract `_resolve_vfs_meta_dir()`, `_is_dirty_vfs_meta_entry()`, and `_count_dirty_entries_in_dir()` in `src/cyswllt/mount_manager.py` to lower `count_pending_uploads()` Cognitive Complexity below `15` while maintaining `0` Snyk Code issues.
+- [x] Verify `pytest` (`26/26`), `ruff`, and `snyk code test` (`0` issues), increment version to `1.0.8`, and verify SonarQube Cloud Quality Gate `OK`.
+
 ## Release v1.0.7: Snyk Code Path Traversal Remediation (`CS1-12`, 2026-11-21)
 - [x] Create branch `fix/CS1-12-snyk-path-traversal` from `origin/main` (`7603d21`).
 - [x] Harden `rclone_cache_root()`, `MountManager`, and `count_pending_uploads()` in `src/cyswllt/mount_manager.py` against `python/PT` (`CWE-23`) via `os.path.commonpath` containment, strict `remote_name` allowlist, and `followlinks=False`.
