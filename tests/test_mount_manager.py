@@ -23,8 +23,9 @@ def _meta(path, dirty):
     path.write_text(json.dumps({"Size": 3, "Fingerprint": "", "Dirty": dirty}))
 
 
-def test_count_pending_uploads_counts_only_dirty_files(tmp_path):
-    meta = tmp_path / "vfsMeta" / "cyswllt_gdrive"
+def test_count_pending_uploads_counts_only_dirty_files(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    meta = tmp_path / "rclone" / "vfsMeta" / "cyswllt_gdrive"
     _meta(meta / "a.txt", True)
     _meta(meta / "docs" / "b.txt", True)
     _meta(meta / "done.txt", False)
@@ -32,8 +33,16 @@ def test_count_pending_uploads_counts_only_dirty_files(tmp_path):
     assert count_pending_uploads(str(meta)) == 2
 
 
-def test_count_pending_uploads_missing_folder(tmp_path):
-    assert count_pending_uploads(str(tmp_path / "nope")) == 0
+def test_count_pending_uploads_missing_folder(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
+    assert count_pending_uploads(str(tmp_path / "rclone" / "nope")) == 0
+
+
+def test_count_pending_uploads_ignores_paths_outside_rclone_cache(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg"))
+    outside = tmp_path / "outside" / "dirty.json"
+    _meta(outside, True)
+    assert count_pending_uploads(str(outside.parent)) == 0
 
 
 def test_pending_uploads_uses_rclone_cache_dir(tmp_path, monkeypatch):
@@ -61,6 +70,25 @@ def _tool(bindir, name, script):
     path = bindir / name
     path.write_text("#!/bin/sh\n" + script)
     path.chmod(path.stat().st_mode | stat.S_IEXEC)
+
+
+def test_mount_uses_resolved_rclone_cache_dir(isolated, monkeypatch):
+    manager, bindir = isolated
+    _tool(bindir, "rclone", "exit 0\n")
+    _tool(bindir, "fusermount3", "exit 0\n")
+    captured = {}
+
+    def fake_popen(command, **_kwargs):
+        captured["command"] = command
+        return object()
+
+    monkeypatch.setattr(mount_manager.subprocess, "Popen", fake_popen)
+    monkeypatch.setattr(manager, "_wait_for_mount", lambda _process, _path: True)
+
+    assert manager.mount() is True
+    command = captured["command"]
+    cache_dir_index = command.index("--cache-dir")
+    assert command[cache_dir_index + 1] == mount_manager.rclone_cache_root()
 
 
 def test_mount_reports_missing_fuse(isolated):
@@ -114,15 +142,16 @@ def test_rclone_cache_root_rejects_traversal_and_relative_xdg(monkeypatch):
         assert mount_manager.rclone_cache_root() == expected_default
 
 
-def test_mount_manager_rejects_unsafe_remote_names_and_symlinks(tmp_path):
+def test_mount_manager_rejects_unsafe_remote_names_and_symlinks(tmp_path, monkeypatch):
     """Verify CS1-12 remote_name allowlist and symlink exclusion in vfsMeta."""
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
     for bad_remote in ["", "../etc", "foo/bar", "bad;name"]:
         with pytest.raises(ValueError, match="Invalid rclone remote name"):
             MountManager(bad_remote)
 
     outside_dirty = tmp_path / "outside_dirty.json"
     outside_dirty.write_text(json.dumps({"Dirty": True}))
-    meta = tmp_path / "vfsMeta" / "cyswllt_gdrive"
+    meta = tmp_path / "rclone" / "vfsMeta" / "cyswllt_gdrive"
     _meta(meta / "real_dirty.json", True)
     (meta / "symlink_escape.json").symlink_to(outside_dirty)
     assert count_pending_uploads(str(meta)) == 1

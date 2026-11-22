@@ -81,11 +81,8 @@ def count_pending_uploads(meta_dir: str) -> int:
         return 0
 
     meta_real = os.path.realpath(meta_dir)
-    if not any(
-        os.path.commonpath([allowed_root, meta_real]) == allowed_root
-        and meta_real.startswith(allowed_root + os.sep)
-        for allowed_root in _allowed_cache_roots()
-    ):
+    cache_root = os.path.realpath(rclone_cache_root())
+    if os.path.commonpath([cache_root, meta_real]) != cache_root:
         return 0
 
     if not os.path.isdir(meta_real):
@@ -305,6 +302,7 @@ Categories=FileManager;
                     rclone_path, "mount",
                     f"{self.remote_name}:",
                     self.mount_point,
+                    "--cache-dir", rclone_cache_root(),
                     "--vfs-cache-mode", "full",
                     "--dir-cache-time", "72h",
                     "--vfs-read-chunk-size", "128M",
