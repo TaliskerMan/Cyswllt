@@ -1,13 +1,14 @@
 # Cyswllt Security Audit & Vulnerability Report
-**Date:** October 23, 2026  
+**Date:** November 21, 2026  
 **Application:** Cyswllt (Linux Cloud Storage Mounter & Manager)  
-**Version:** 1.0.5-1  
+**Version:** 1.0.7-1  
 
 ## 1. Executive Summary
-A comprehensive security audit, quality gate verification, and shift-left static analysis evaluation has been conducted on Cyswllt v1.0.5-1 for Linux. Cyswllt integrates rclone and FUSE into a modern GTK4/libadwaita Linux desktop user interface with local-first credentials handling. Zero vulnerabilities, zero secrets/credential leaks, and zero code defects were identified across unit test suites, Grype vulnerability scans, and Syft CycloneDX SBOM analysis.
+A comprehensive security audit, Snyk Code (`v1.1309.0`) & SonarQube Cloud (`TaliskerMan_Cyswllt`) quality gate verification, and shift-left static analysis evaluation has been conducted on Cyswllt v1.0.7-1 for Linux (`CS1-12`). Cyswllt integrates rclone and FUSE into a modern GTK4/libadwaita Linux desktop user interface with local-first credentials handling and canonical XDG path-traversal containment. Zero vulnerabilities, zero secrets/credential leaks, and zero code defects were identified across Snyk Code (`0` issues), SonarQube Cloud, unit test suites (`24/24` passing), Grype vulnerability scans, and Syft CycloneDX SBOM analysis.
 
 ## 2. Shift-Left Static Analysis & Test Gates
-- **Unit & Smoke Tests (`pytest`)**: **Passed**. 19/19 tests passed cleanly across core imports, authentication manager, credential encryption, and FUSE mount lifecycle managers.
+- **Snyk Code SAST & Open Source (`snyk v1.1309.0`, `taliskerman`)**: **Passed (`0` issues)**. Remediated `CS1-12` (`2 × python/PT`, `CWE-23`) in `src/cyswllt/mount_manager.py` via canonical `os.path.commonpath` XDG containment, `remote_name` allowlist validation, and symlink-safe `vfsMeta` inspection.
+- **Unit & Smoke Tests (`pytest`)**: **Passed**. 24/24 tests passed cleanly across core imports, authentication manager, credential encryption, XDG traversal & symlink guards, and FUSE mount lifecycle managers.
 - **Python Packaging & Syntax Integrity**: Tested with pure Python 3.9+ standards, strict typing, and zero unhandled exceptions.
 - **Launcher Integrity**: Verified `debian/rules` properly handles CLI argument passthrough (`"$@"`) to prevent argument clobbering.
 

@@ -1,6 +1,12 @@
 # Plan for Cyswllt
 - [x] Untrack sonar-project.properties from GitHub and add to .gitignore
 
+## Release v1.0.7: Snyk Code Path Traversal Remediation (`CS1-12`, 2026-11-21)
+- [x] Create branch `fix/CS1-12-snyk-path-traversal` from `origin/main` (`7603d21`).
+- [x] Harden `rclone_cache_root()`, `MountManager`, and `count_pending_uploads()` in `src/cyswllt/mount_manager.py` against `python/PT` (`CWE-23`) via `os.path.commonpath` containment, strict `remote_name` allowlist, and `followlinks=False`.
+- [x] Add regression unit tests in `tests/test_mount_manager.py` and verify `pytest`, `ruff`, and `snyk code test` (`0` issues).
+- [x] Auto-increment version to `1.0.7` across `src/cyswllt/version.py`, `debian/changelog`, `docs/guide/`, `sonar-project.properties`, `CHANGELOG.md`, and `Audit/security_report.md`, then open GitHub Pull Request for `CS1-12`.
+
 ## Official Linux Release v1.0.5 (2026-10-23)
 - [x] Phase 1: Environment & Test Validation
   - [x] Run pytest unit & smoke test suites (19/19 passing)
