@@ -104,3 +104,25 @@ def test_rclone_log_is_owner_only(isolated):
     manager.mount()
     mode = os.stat(mount_manager.RCLONE_LOG_FILE).st_mode & 0o777
     assert mode == 0o600
+
+
+def test_rclone_cache_root_rejects_traversal_and_relative_xdg(monkeypatch):
+    """Verify CS1-12 CWE-23 XDG_CACHE_HOME traversal fallback."""
+    expected_default = os.path.realpath(os.path.expanduser("~/.cache/rclone"))
+    for unsafe in ["relative/cache", "/tmp/../etc", "/etc/passwd", "../../escape"]:
+        monkeypatch.setenv("XDG_CACHE_HOME", unsafe)
+        assert mount_manager.rclone_cache_root() == expected_default
+
+
+def test_mount_manager_rejects_unsafe_remote_names_and_symlinks(tmp_path):
+    """Verify CS1-12 remote_name allowlist and symlink exclusion in vfsMeta."""
+    for bad_remote in ["", "../etc", "foo/bar", "bad;name"]:
+        with pytest.raises(ValueError, match="Invalid rclone remote name"):
+            MountManager(bad_remote)
+
+    outside_dirty = tmp_path / "outside_dirty.json"
+    outside_dirty.write_text(json.dumps({"Dirty": True}))
+    meta = tmp_path / "vfsMeta" / "cyswllt_gdrive"
+    _meta(meta / "real_dirty.json", True)
+    (meta / "symlink_escape.json").symlink_to(outside_dirty)
+    assert count_pending_uploads(str(meta)) == 1

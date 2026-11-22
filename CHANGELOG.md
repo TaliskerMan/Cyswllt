@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.7] - 2026-11-21
+
+### Security & Hardening
+- **Snyk Code Path Traversal Remediation (`CS1-12`, `2 × python/PT`, `CWE-23`):** Hardened `rclone_cache_root()`, `MountManager.__init__()`, `MountManager.pending_uploads()`, and `count_pending_uploads()` in `src/cyswllt/mount_manager.py` with XDG Base Directory absolute-path validation, `..` rejection, `os.path.commonpath` containment under `$HOME` (or isolated test temp sandboxes), strict `remote_name` allowlist (`^[A-Za-z0-9_-]+$`), and `followlinks=False` symlink-safe `vfsMeta` inspection. Verified `0` open issues in `snyk code test` (`v1.1309.0`).
+- **Regression Tests:** Added XDG traversal, unsafe `remote_name`, and `vfsMeta` symlink-escape tests in `tests/test_mount_manager.py`.
+
 ## [1.0.5] - 2026-10-16
 
 ### Fixed — claims vs code review & shift-left hardening (2026-10-16)

@@ -3,10 +3,13 @@
 # Released under the GNU GPL v3 license.
 
 import json
-import subprocess
-import shutil
 import logging
 import os
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import tempfile
 import time
 
 # How long to wait for rclone to finish mounting. A first mount can take
@@ -16,14 +19,52 @@ MOUNT_TIMEOUT_SECONDS = 30
 # rclone's own log for the mount, read back to explain a failed mount.
 RCLONE_LOG_FILE = os.path.expanduser("~/.cache/cyswllt/rclone.log")
 
-
-def rclone_cache_root():
-    """rclone's default cache folder ($XDG_CACHE_HOME/rclone or ~/.cache/rclone)."""
-    base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
-    return os.path.join(base, "rclone")
+# Conservative allowlist for configured rclone remote identifiers.
+_REMOTE_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
-def count_pending_uploads(meta_dir):
+def _allowed_cache_roots() -> tuple[str, str]:
+    """Return canonical allowed roots (`$HOME` and system temp dir for test sandboxes)."""
+    return (
+        os.path.realpath(os.path.expanduser("~")),
+        os.path.realpath(tempfile.gettempdir()),
+    )
+
+
+def rclone_cache_root() -> str:
+    """Resolve rclone's cache folder (`$XDG_CACHE_HOME/rclone` or `~/.cache/rclone`) safely.
+
+    Change Comment (2026-11-21, CS1-12 / Snyk python/PT CWE-23 / CP-ChangeComments):
+    Enforced XDG Base Directory absolute-path validation, `..` segment rejection,
+    and canonical `os.path.commonpath` containment under `$HOME` (or temp root in tests).
+    """
+    home_root, temp_root = _allowed_cache_roots()
+    fallback_base = os.path.realpath(os.path.join(home_root, ".cache"))
+
+    raw_value = os.environ.get("XDG_CACHE_HOME", "")
+    chosen_base = fallback_base
+    if (
+        raw_value
+        and "\x00" not in raw_value
+        and os.path.isabs(raw_value)
+        and ".." not in Path(raw_value).parts
+    ):
+        candidate_base = os.path.realpath(raw_value)
+        for allowed_root in (home_root, temp_root):
+            if os.path.commonpath([allowed_root, candidate_base]) == allowed_root:
+                chosen_base = candidate_base
+                break
+
+    cache_real = os.path.realpath(os.path.join(chosen_base, "rclone"))
+    if (
+        os.path.commonpath([chosen_base, cache_real]) != chosen_base
+        or not cache_real.startswith(chosen_base + os.sep)
+    ):
+        cache_real = os.path.realpath(os.path.join(fallback_base, "rclone"))
+    return cache_real
+
+
+def count_pending_uploads(meta_dir: str) -> int:
     """
     Counts files in an rclone VFS metadata folder that are still waiting to be
     uploaded (``"Dirty": true``). rclone writes one small JSON file per cached
@@ -36,13 +77,37 @@ def count_pending_uploads(meta_dir):
     Returns:
         int: Number of files not yet uploaded (0 if the folder doesn't exist).
     """
-    pending = 0
-    if not os.path.isdir(meta_dir):
+    if not meta_dir or "\x00" in meta_dir:
         return 0
-    for root, _dirs, files in os.walk(meta_dir):
+
+    meta_real = os.path.realpath(meta_dir)
+    if not any(
+        os.path.commonpath([allowed_root, meta_real]) == allowed_root
+        and meta_real.startswith(allowed_root + os.sep)
+        for allowed_root in _allowed_cache_roots()
+    ):
+        return 0
+
+    if not os.path.isdir(meta_real):
+        return 0
+
+    pending = 0
+    for root, _dirs, files in os.walk(meta_real, followlinks=False):
+        root_real = os.path.realpath(root)
+        if os.path.commonpath([meta_real, root_real]) != meta_real:
+            continue
         for name in files:
+            candidate = os.path.join(root_real, name)
+            if os.path.islink(candidate):
+                continue
+            entry_real = os.path.realpath(candidate)
+            if (
+                not entry_real.startswith(meta_real + os.sep)
+                or os.path.commonpath([meta_real, entry_real]) != meta_real
+            ):
+                continue
             try:
-                with open(os.path.join(root, name), "r") as handle:
+                with open(entry_real, "r", encoding="utf-8") as handle:
                     if json.load(handle).get("Dirty") is True:
                         pending += 1
             except (OSError, ValueError, AttributeError):
@@ -61,6 +126,8 @@ class MountManager:
         Args:
             remote_name (str): The name of the configured rclone remote (e.g. cyswllt_gdrive).
         """
+        if not remote_name or not _REMOTE_NAME_RE.match(remote_name):
+            raise ValueError(f"Invalid rclone remote name: {remote_name!r}")
         self.remote_name = remote_name
         self.mount_point = os.path.expanduser("~/GoogleDrive")
         # Human-readable reasons the last mount/unmount failed, for the UI.
@@ -75,8 +142,13 @@ class MountManager:
         in the background; disconnecting early leaves them in the cache until
         the next connect.
         """
-        meta_dir = os.path.join(rclone_cache_root(), "vfsMeta", self.remote_name)
-        return count_pending_uploads(meta_dir)
+        cache_root = rclone_cache_root()
+        meta_real = os.path.realpath(
+            os.path.join(cache_root, "vfsMeta", self.remote_name)
+        )
+        if not meta_real.startswith(cache_root + os.sep):
+            return 0
+        return count_pending_uploads(meta_real)
 
     @staticmethod
     def fuse_available():
