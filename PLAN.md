@@ -1,5 +1,12 @@
 # Plan for Cyswllt
-- [x] Untrack sonar-project.properties from GitHub and add to .gitignore
+
+## Official Linux Release v1.0.9 & Documentation Audit (2026-11-27)
+- [x] Audit `TaliskerMan/Cyswllt` codebase, `~/sarules`, GitHub docs (`README.md`, `Cyswllt_User_Guide.md`), and live `https://nordheim.online/cyswllt/` page.
+- [x] Restore missing `AuthManager.has_custom_credentials()` and `AuthManager.clear_custom_credentials()` helpers called by `PerformanceDialog` and add regression unit tests (`27/27` tests).
+- [x] Auto-increment version to `1.0.9` across `src/cyswllt/version.py`, `debian/changelog`, `sonar-project.properties`, `.sonarcloud.properties`, `docs/guide/`, `CHANGELOG.md`, `release_notes.md`, and `Audit/security_report.md` (`CP-AutoIncrement`), and regenerate `docs/Cyswllt_User_Guide.pdf`.
+- [x] Verify unit tests (`pytest`), `ruff`, `shellcheck`, Snyk Code & Open Source (`0` issues), Grype/Trivy/OSV-Scanner, and SonarQube Cloud (`TaliskerMan_Cyswllt`) Quality Gate `OK`.
+- [x] Build GPG-signed `cyswllt_1.0.9-1_all.deb`, CycloneDX SBOM, and SHA-512/SHA-256 checksums, stage in `~/NOBuilds/Cyswllt-11-27-2026-1.0.9-1/`, and publish official GitHub Release `v1.0.9`.
+- [x] Update `https://nordheim.online/cyswllt/` (Page `534`) to match `v1.0.9` and verify live rendering.
 
 ## Release v1.0.8: SonarQube Cloud `python:S3776` Quality Gate Remediation (2026-11-22)
 - [x] Extract `_resolve_vfs_meta_dir()`, `_is_dirty_vfs_meta_entry()`, and `_count_dirty_entries_in_dir()` in `src/cyswllt/mount_manager.py` to lower `count_pending_uploads()` Cognitive Complexity below `15` while maintaining `0` Snyk Code issues.

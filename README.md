@@ -7,6 +7,7 @@ Cyswllt (Welsh for "Connect") - pronounced like "Kuh-swill-it", is a GTK applica
 -   **One-Click Mount**: Mount and unmount your drive with a single button.
 -   **Clear errors**: If mounting fails (no FUSE, no network, an rclone error), Cyswllt tells you why instead of silently returning to "Ready to Connect".
 -   **Safe disconnect**: Files you copy into the drive upload in the background. Disconnect waits until they've finished uploading (see below).
+-   **Performance Settings**: Optionally supply your own Google Cloud OAuth Client ID and Secret (`Menu ☰ → Performance Settings`) to bypass rclone's shared rate-limited credentials.
 -   **Desktop Integration**: Places a "Google Drive" launcher in `~/Desktop` when mounted. It shows on the desktop only where desktop icons are enabled (for example Ubuntu's desktop; plain GNOME needs an extension), and opens the drive with `xdg-open`.
 -   **Open Source**: Released under the GNU GPL v3 license.
 
@@ -21,9 +22,9 @@ Cyswllt (Welsh for "Connect") - pronounced like "Kuh-swill-it", is a GTK applica
 ### Installing the package
 ```bash
 sha512sum -c checksums.sha512
-gpg --import pubkey.asc
-gpg --verify cyswllt_<version>-1_all.deb.asc cyswllt_<version>-1_all.deb
-sudo apt install ./cyswllt_<version>-1_all.deb
+gpg --import chuck_pubkey.asc
+gpg --verify cyswllt_1.0.9-1_all.deb.asc cyswllt_1.0.9-1_all.deb
+sudo apt install ./cyswllt_1.0.9-1_all.deb
 ```
 
 ### Running from Source
@@ -53,10 +54,16 @@ next time you connect; they aren't on Google Drive until then.
 
 ## Security & privacy notes
 Cyswllt stores your optional custom Google Client ID/Secret at
-`~/.config/cyswllt/google_credentials.json` with `0600` permissions. The Google
-Drive **OAuth token itself** is written by rclone to
-`~/.config/rclone/rclone.conf` in plaintext (rclone's default, unencrypted). If
-you want it encrypted, run `rclone config` and set a config password.
+`~/.config/cyswllt/credentials.json` with `0600` permissions (inside `0700`
+`~/.config/cyswllt/`), and writes sanitized local diagnostic logs to
+`~/.cache/cyswllt/cyswllt.log` (`0600`, rotated at 5 MiB) and
+`~/.cache/cyswllt/rclone.log` (`0600`). The Google Drive **OAuth token itself**
+is written by rclone to `~/.config/rclone/rclone.conf` in plaintext (rclone's
+default, unencrypted). If you want it encrypted, run `rclone config` and set a
+config password.
+
+## Author & Website
+Chuck Talk, Nordheim Online, LLC — <chuck@nordheim.online> · https://nordheim.online
 
 ## Contributing
 Contributions are welcome! Please update `CyswlltPlan.md` with your changes.

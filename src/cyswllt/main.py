@@ -9,13 +9,13 @@ from logging.handlers import RotatingFileHandler
 import os
 import gi
 
+from cyswllt.auth_manager import AuthManager
+from cyswllt.mount_manager import MountManager
+
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 
-from gi.repository import Gtk, Adw, Gio, GLib, Gdk
-
-from cyswllt.auth_manager import AuthManager
-from cyswllt.mount_manager import MountManager
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk  # noqa: E402
 
 
 class PerformanceDialog(Adw.PreferencesWindow):

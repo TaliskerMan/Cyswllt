@@ -162,6 +162,58 @@ class AuthManager:
             logging.exception("Error loading credentials")
         return None
 
+    def has_custom_credentials(self) -> bool:
+        """Return True when valid custom Google OAuth credentials are stored on disk.
+
+        Change Comment (2026-11-27, v1.0.9 / CP-ChangeComments):
+        Restored helper invoked by PerformanceDialog._refresh_status() in main.py
+        so opening Performance Settings never raises AttributeError.
+        """
+        return self.get_custom_credentials() is not None
+
+    def _clear_remote_custom_credentials(self) -> None:
+        """Remove custom client_id and client_secret entries from rclone.conf if present."""
+        conf_path = self.get_rclone_config_file()
+        if not os.path.exists(conf_path):
+            return
+        parser = configparser.RawConfigParser()
+        parser.read(conf_path, encoding="utf-8")
+        if not parser.has_section(self.REMOTE_NAME):
+            return
+        removed_id = parser.remove_option(self.REMOTE_NAME, "client_id")
+        removed_secret = parser.remove_option(self.REMOTE_NAME, "client_secret")
+        if not (removed_id or removed_secret):
+            return
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        mode = stat.S_IRUSR | stat.S_IWUSR
+        with open(
+            conf_path,
+            "w",
+            encoding="utf-8",
+            opener=lambda p, f: os.open(p, flags, mode),
+        ) as conf_file:
+            parser.write(conf_file)
+
+    def clear_custom_credentials(self) -> bool:
+        """Delete stored custom Google OAuth credentials and revert rclone.conf to defaults.
+
+        Change Comment (2026-11-27, v1.0.9 / CP-ChangeComments):
+        Restored helper invoked by PerformanceDialog._on_clear() in main.py so users
+        can cleanly remove custom OAuth credentials without encountering AttributeError.
+
+        Returns:
+            True if credentials were cleared (or already absent), False on I/O failure.
+        """
+        try:
+            path = self.get_credentials_file()
+            if os.path.exists(path):
+                os.remove(path)
+            self._clear_remote_custom_credentials()
+            return True
+        except Exception:
+            logging.exception("Error clearing credentials")
+            return False
+
     def _persist_remote_credentials(self, creds: dict[str, str]) -> None:
         """Persist validated client_id and client_secret into rclone.conf."""
         client_id = creds.get("client_id", "")

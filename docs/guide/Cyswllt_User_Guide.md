@@ -1,6 +1,6 @@
 title: Cyswllt
 subtitle: Installation and User Guide
-version: 1.0.8
+version: 1.0.9
 platforms: Linux (GNOME and other GTK desktops)
 ## About Cyswllt
 
@@ -31,19 +31,19 @@ Cyswllt is a graphical front end for **rclone**, the widely used open-source clo
 
 ### From the release package
 
-1. Download `cyswllt_<version>-1_all.deb`, its signature (`.asc`), `checksums.sha512` and `pubkey.asc` from the release page.
+1. Download `cyswllt_1.0.9-1_all.deb`, its signature (`cyswllt_1.0.9-1_all.deb.asc`), `checksums.sha512` and `chuck_pubkey.asc` from the release page.
 2. Check the download:
 
 ```
 sha512sum -c checksums.sha512
-gpg --import pubkey.asc
-gpg --verify cyswllt_<version>-1_all.deb.asc cyswllt_<version>-1_all.deb
+gpg --import chuck_pubkey.asc
+gpg --verify cyswllt_1.0.9-1_all.deb.asc cyswllt_1.0.9-1_all.deb
 ```
 
 3. Install it (this also installs rclone and FUSE):
 
 ```
-sudo apt install ./cyswllt_<version>-1_all.deb
+sudo apt install ./cyswllt_1.0.9-1_all.deb
 ```
 
 4. Open **Cyswllt** from your applications menu, or run `cyswllt`.
@@ -124,7 +124,7 @@ By default, rclone signs in using its own shared Google API key, which is rate-l
 
 - Cyswllt has no servers, analytics or telemetry. Your files travel directly between your computer and Google.
 - The mount folder `~/GoogleDrive` is created readable by you only.
-- Your optional Client ID and Secret are stored in `~/.config/cyswllt/google_credentials.json`, readable by you only.
+- Your optional Client ID and Secret are stored in `~/.config/cyswllt/credentials.json`, readable by you only.
 - **Your Google sign-in token is stored by rclone** in `~/.config/rclone/rclone.conf`, in the section `[cyswllt_gdrive]`. By default rclone doesn't encrypt this file. To protect it, run `rclone config`, choose **Set configuration password**, and enter a password; rclone will then ask for it when Cyswllt mounts the Drive.
 - Google's consent page may name **rclone**, because Cyswllt uses rclone's Google sign-in unless you add your own Client ID.
 
@@ -135,9 +135,9 @@ By default, rclone signs in using its own shared Google API key, which is rate-l
 | Mount point | `~/GoogleDrive` |
 | Desktop launcher (while mounted) | `~/Desktop/google-drive.desktop` |
 | Google sign-in token | `~/.config/rclone/rclone.conf` (`[cyswllt_gdrive]`) |
-| Optional Client ID/Secret | `~/.config/cyswllt/google_credentials.json` |
+| Optional Client ID/Secret | `~/.config/cyswllt/credentials.json` |
 | File cache | rclone's cache folder (usually `~/.cache/rclone`), up to 10 GB |
-| Logs | `~/.cache/cyswllt/cyswllt.log` and `~/.cache/cyswllt/rclone.log` (readable by you only) |
+| Logs | `~/.cache/cyswllt/cyswllt.log` (rotated at 5 MiB) and `~/.cache/cyswllt/rclone.log` (readable by you only) |
 
 ## Troubleshooting
 

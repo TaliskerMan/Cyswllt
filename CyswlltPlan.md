@@ -30,6 +30,9 @@
 
 ## Release History
 
+### Release 1.0.9 (2026-11-27)
+- **Official Linux Release & Hardening Rollup (`v1.0.6` – `v1.0.9`)**: Restored `AuthManager` custom credential status/clear helpers for `PerformanceDialog`, consolidated SonarQube Cloud (`TaliskerMan_Cyswllt`) and Snyk Code (`CS1-12` `CWE-23`) remediations, regenerated `Cyswllt_User_Guide.pdf`, built GPG-signed `cyswllt_1.0.9-1_all.deb` into `~/NOBuilds/Cyswllt-11-27-2026-1.0.9-1/`, and aligned GitHub & `nordheim.online/cyswllt/` documentation.
+
 ### Release 1.0.5 (2026-10-16)
 - **Claims vs Code Review**: Verified user guide against implementation; enforced FUSE requirement, robust mount error reporting, and upload-wait on disconnect.
 - **Security & Quality**: Clean pass across all SonarQube rules, ShellCheck, Semgrep, osv-scanner, syft CycloneDX SBOM, and grype CVE checks.

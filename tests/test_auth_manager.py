@@ -74,6 +74,31 @@ class TestCredentialValidationAndAuthFlow:
             # Reject leading hyphen (CWE-88 argument injection attempt)
             assert not mgr.save_custom_credentials("--evil-flag", "GOCSPX-secret_value_123")
 
+    def test_has_and_clear_custom_credentials(self, tmp_path):
+        mgr = AuthManager()
+        conf_dir = tmp_path / "cyswllt"
+        conf_dir.mkdir()
+        rclone_conf = tmp_path / "rclone.conf"
+        with (
+            patch.object(mgr, "get_config_dir", return_value=str(conf_dir)),
+            patch.object(mgr, "get_rclone_config_file", return_value=str(rclone_conf)),
+        ):
+            assert mgr.has_custom_credentials() is False
+            assert mgr.save_custom_credentials(
+                "123456-abc.apps.googleusercontent.com",
+                "GOCSPX-secret_value_123",
+            )
+            mgr._persist_remote_credentials(mgr.get_custom_credentials())
+            assert mgr.has_custom_credentials() is True
+
+            assert mgr.clear_custom_credentials() is True
+            assert mgr.has_custom_credentials() is False
+            assert mgr.get_custom_credentials() is None
+            parser = configparser.RawConfigParser()
+            parser.read(rclone_conf, encoding="utf-8")
+            assert not parser.has_option(AuthManager.REMOTE_NAME, "client_id")
+            assert not parser.has_option(AuthManager.REMOTE_NAME, "client_secret")
+
     def test_start_authentication_uses_env_and_persists_rclone_conf(self, tmp_path):
         mgr = AuthManager()
         conf_dir = tmp_path / "cyswllt"

@@ -1,3 +1,12 @@
+cyswllt (1.0.9-1) unstable; urgency=medium
+
+  * Official Linux release v1.0.9: restored AuthManager custom credential
+    status/clear helpers for PerformanceDialog, fixed user-guide icon and
+    install script paths, updated CycloneDX SBOM & NOBuilds release pipeline,
+    and aligned README and PDF user guide documentation.
+
+ -- Chuck Talk <chuck@nordheim.online>  Fri, 27 Nov 2026 15:45:00 -0600
+
 cyswllt (1.0.8-1) unstable; urgency=medium
 
   * Refactored count_pending_uploads() in src/cyswllt/mount_manager.py into

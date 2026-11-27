@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.9] - 2026-11-27
+
+### Fixed & Hardened
+- **Performance Settings Credential Helpers (`src/cyswllt/auth_manager.py`):** Restored `AuthManager.has_custom_credentials()` and `AuthManager.clear_custom_credentials()` (plus automatic removal of custom `client_id` / `client_secret` keys from `rclone.conf` upon clearing) so opening **Menu → Performance Settings** or clearing saved credentials never raises `AttributeError` (`27/27` `pytest` passing).
+- **Documentation & Guide Builder Alignment (`README.md`, `docs/guide/`):** Corrected the custom OAuth credentials filename from `google_credentials.json` to `credentials.json`, documented rotated `0600` logs (`~/.cache/cyswllt/cyswllt.log` and `rclone.log`), fixed the default 512×512 PNG icon path in `docs/guide/build_guide.js` and `install.sh`, and regenerated `docs/Cyswllt_User_Guide.pdf` for `v1.0.9`.
+- **Standardized Linux Release Pipeline (`build_release.sh`):** Updated `build_release.sh` to generate path-sanitized CycloneDX SBOMs (`Audit/SBOM-Linux.json`, `Audit/SBOM-Linux`, `Audit/sbom.json`), non-interactive GPG detached signatures (`chuck@nordheim.online`), basename-clean SHA-512/SHA-256 checksums, and full `~/NOBuilds/Cyswllt-11-27-2026-1.0.9-1/` archiving.
+
 ## [1.0.8] - 2026-11-22
 
 ### Quality & Maintainability

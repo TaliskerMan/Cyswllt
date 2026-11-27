@@ -2,7 +2,7 @@
  * Author: Chuck Talk, <chuck@nordheim.online>
  * Project: Cyswllt
  * Purpose: Hardened user-guide PDF builder with canonical path containment and linear-time parsers.
- * Updated: 2026-11-15
+ * Updated: 2026-11-27 (CP-ChangeComments: v1.0.9 512x512 icon path, fallback version, and system Chrome support)
  */
 
 import fs from 'node:fs';
@@ -194,7 +194,7 @@ function injectHeadingIdsAndBuildToc(html) {
 const mdPath = resolveContainedPath(process.argv[2], 'Cyswllt_User_Guide.md', true);
 const iconPath = resolveContainedPath(
   process.argv[3],
-  '../../data/icons/hicolor/scalable/apps/com.taliskerman.cyswllt.png',
+  '../../data/icons/hicolor/512x512/apps/com.taliskerman.cyswllt.png',
   true
 );
 const outPath = resolveContainedPath(process.argv[4], '../Cyswllt_User_Guide.pdf', false);
@@ -215,7 +215,7 @@ const { html: bodyHtml, tocHtml } = injectHeadingIdsAndBuildToc(withCallouts);
 
 const cleanTitle = stripHtmlTags(meta.title || 'Cyswllt');
 const cleanSubtitle = stripHtmlTags(meta.subtitle || 'Installation and User Guide');
-const cleanVersion = stripHtmlTags(meta.version || '1.0.8');
+const cleanVersion = stripHtmlTags(meta.version || '1.0.9');
 const cleanPlatforms = stripHtmlTags(meta.platforms || 'Linux (GNOME and other GTK desktops)');
 
 const documentHtml = `<!doctype html><html><head><meta charset="utf-8"><style>
@@ -269,7 +269,11 @@ strong { color: var(--navy); }
 ${bodyHtml}
 </body></html>`;
 
-const browser = await chromium.launch();
+const SYSTEM_CHROME = '/usr/bin/google-chrome';
+const launchOptions = fs.existsSync(SYSTEM_CHROME)
+  ? { executablePath: SYSTEM_CHROME }
+  : {};
+const browser = await chromium.launch(launchOptions);
 try {
   const page = await browser.newPage();
   await page.setContent(documentHtml, { waitUntil: 'load' });
