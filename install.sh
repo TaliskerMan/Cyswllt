@@ -38,7 +38,7 @@ if [[ -f /etc/fuse.conf ]] && ! grep -q "^user_allow_other" /etc/fuse.conf; then
 fi
 
 echo "Installing Cyswllt Python package in user space..."
-pip3 install --user .
+pip3 install --only-binary :all: --user .
 
 echo "Installing Desktop Entry and Icons..."
 mkdir -p "${APPS_DIR}"
