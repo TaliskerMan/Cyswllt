@@ -1,5 +1,12 @@
 # <img src="data/cyswllt.jpg" width="48" height="48" align="top"> Cyswllt
 
+<p align="center">
+  <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_Cyswllt"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_Cyswllt&metric=alert_status" alt="Quality Gate Status"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_Cyswllt"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_Cyswllt&metric=security_rating" alt="Security Rating"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_Cyswllt"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_Cyswllt&metric=reliability_rating" alt="Reliability Rating"></a>
+  <a href="https://sonarcloud.io/summary/new_code?id=TaliskerMan_Cyswllt"><img src="https://sonarcloud.io/api/project_badges/measure?project=TaliskerMan_Cyswllt&metric=sqale_rating" alt="Maintainability Rating"></a>
+</p>
+
 Cyswllt (Welsh for "Connect") - pronounced like "Kuh-swill-it", is a GTK application that allows you to easily mount and unmount your Google Drive on Linux locally.
 
 ## Features
